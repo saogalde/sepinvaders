@@ -70,8 +70,8 @@
 #include <stdint.h>
 
 
-#define TFT_HEIGHT 128
-#define TFT_WIDTH 160
+#define TFT_HEIGHT 160
+#define TFT_WIDTH 128
 
 
 

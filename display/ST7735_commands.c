@@ -126,5 +126,6 @@ void ST7735_init(void)
 	// y extends to the bottom.
 	// Compare Adafruit_ST7735::setRotation and the datasheet for more info.
 	wc(ST7735_MADCTL);
-	wd(MADCTL_MX | MADCTL_MV | MADCTL_RGB);
+	//wd(MADCTL_MX | MADCTL_MV | MADCTL_RGB);
+	wd(MADCTL_MX | MADCTL_MY | MADCTL_RGB);
 }
