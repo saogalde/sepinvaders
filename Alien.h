@@ -13,6 +13,7 @@ const uint8_t sprite_type1_0[11] = {14,24,190,109,61,60,61,109,190,24,14};
 const uint8_t sprite_type1_1[11] = {14,24,190,109,61,60,61,109,190,24,14};
 const uint8_t sprite_type2_0[11] = {14,24,190,109,61,60,61,109,190,24,14};
 const uint8_t sprite_type2_1[11] = {14,24,190,109,61,60,61,109,190,24,14};
+//const uint8_t sprite_destroy[11];
 
 class Alien{
 	public:
@@ -21,13 +22,13 @@ class Alien{
 		bool destroyedAlien(uint8_t x, uint8_t y);
 
 	private:
-		uint8_t _type, _x, _y; 	// type of alien, and position coordinates
+		uint8_t _type, _x, _y, movCounter; 	// type of alien, and position coordinates
 		bool animationSprite;	// status of the animation
 		bool direction; 		// direction of movement. Uses the DIRECTION_LEFT
 								// and DIRECTION_RIGHT macros
 		uint8_t *sprite_0, *sprite_1; // one for each different sprite of the animation
 		void drawAlien(uint8_t x, uint8_t y);
 		void eraseAlien(uint8_t x, uint8_t y);
-}
+};
 
 #endif

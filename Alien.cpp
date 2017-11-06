@@ -9,6 +9,7 @@ Alien::Alien(uint8_t type, uint8_t x, uint8_t y){
 	_type = type;
 	direction = DIRECTION_LEFT;
 	animationSprite = ANIM_0;
+	movCounter = 0;
 	switch(_type){
 		case 0:
 			sprite_0= sprite_type0_0; // WARNING: ONLY THE POINTER IS BEING COPIED
