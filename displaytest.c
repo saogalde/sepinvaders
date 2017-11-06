@@ -29,7 +29,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-
+#include "Alien.h"
 #include "SPI/SPI_implement_me.h"
 #include "USART/USART_implement_me.h"
 
@@ -41,13 +41,24 @@
 #define UBRR_VALUE F_CPU/16/BAUD-1
 
 void drawAlien(uint8_t x, uint8_t y) {
-	uint8_t alien[13] = {0,14,24,190,109,61,60,61,109,190,24,14,0};
+	uint8_t alien[13] = {14,24,190,109,61,60,61,109,190,24,14};
 	x = x-6;
 	y = y+4;
 	for(int i=0; i<13; i++){
 		for(int j=0; j<8; j++){
 			if(alien[i]&(1<<j)) drawPixel(x+i, y-j, ST7735_WHITE);
 			else drawPixel(x+i, y-j, ST7735_BLACK);
+		}
+	}
+}
+
+void eraseAlien(uint8_t x, uint8_t y) {
+	uint8_t alien[13] = {0,14,24,190,109,61,60,61,109,190,24,14,0};
+	x = x-6;
+	y = y+4;
+	for(int i=0; i<13; i++){
+		for(int j=0; j<8; j++){
+			if(alien[i]&(1<<j)) drawPixel(x+i, y-j, ST7735_BLACK);
 		}
 	}
 }
@@ -73,9 +84,11 @@ int main(void)
 
 	USART_Transmit_String("success.\n");
 	fillScreen(ST7735_BLACK);
-	drawAlien(TFT_WIDTH/2, TFT_HEIGHT/2);
-	drawPixel(0, 0, ST7735_WHITE);
-	// Test programs. The following sequence runs many different images over the display.
+	for(int i = 0; i<50; i++){
+	drawAlien(TFT_WIDTH/2, 10+i*2);
+	_delay_ms(400);
+	eraseAlien(TFT_WIDTH/2, 10+i*2);
+}// Test programs. The following sequence runs many different images over the display.
 	// Showing this full working sequence to your superviros is mandatory for passing the lab.
 	// Apart from that, feel free to adapt and explore this code and the functions called by it.
 	while(true)
