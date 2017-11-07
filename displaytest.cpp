@@ -25,6 +25,7 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include <avr/interrupt.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
@@ -41,6 +42,31 @@
 #define BAUD	9600					// serial communication baud rate
 #define UBRR_VALUE F_CPU/16/BAUD-1
 
+static uint8_t SpaceshipPos[2] = {TFT_WIDTH/2,TFT_HEIGHT-20};
+
+void stop_timer1(void) {
+	TCCR1B &= ~((1<<CS10)|(1<<CS12));									/* CS => prescaler set to 64 */
+}
+
+void start_timer1(void) {
+	TCCR1B |= (1<<CS10)|(1<<CS12);									/* CS => prescaler set to 64 */
+}
+
+void Timer_IO_Init(void) {
+	TCCR1B |= (1 << WGM12);
+	TIMSK1 |= (1 << OCIE1A);
+	OCR1A   = 1562;
+	TCCR1B |= (1<<CS10)|(1<<CS12);									/* CS => prescaler set to 64 */
+
+	DDRC &= ~(1<<DDC0);												/* Input button */
+	PORTC |= (1<<PORTC0);											/* pull-pu */
+
+	DDRC &= ~(1<<DDC1);												/* Input button */
+	PORTC |= (1<<PORTC1);											/* pull-pu */
+
+	DDRC |= (1<<DDC2);												/* output button */
+	PORTC &= ~(1<<PORTC2);											/* clear */
+}
 
 /** The main function */
 int main(void)
@@ -49,6 +75,12 @@ int main(void)
 	USART_Init(BAUD);
 	SPI_Master_Init();
 	ST7735_init();
+	drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
+	Timer_IO_Init();
+	sei();
+	start_timer1();
+
+	
 	Alien only1alien(0, TFT_WIDTH/3, TFT_HEIGHT/3);
 	Alien only2alien(0, TFT_WIDTH/3+15, TFT_HEIGHT/3);
 	Alien only3alien(0, TFT_WIDTH/3-15, TFT_HEIGHT/3);
@@ -70,3 +102,17 @@ int main(void)
 	while(1);
 }// Test programs. The following sequence runs many different images over the display.
 
+
+ISR(TIMER1_COMPA_vect) {
+	if(!(PINC & (1<<PINC0))) {
+		stop_timer1();
+		SpaceshipPos[0] -= 2;
+		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
+	}
+	else if (!(PINC & (1<<PINC1))) {
+		stop_timer1();
+		SpaceshipPos[0] += 2;
+		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
+	}
+	PORTC ^= (1<<PC2);
+}

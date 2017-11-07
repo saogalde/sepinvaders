@@ -38,3 +38,4 @@ const uint8_t number9[5] = {0x32,0x49,0x49,0x49,0x3E};
 void drawGenericSprite(uint8_t x, uint8_t y, uint8_t x_length, uint8_t color);
 void drawNumber(uint8_t x, uint8_t y, uint8_t number);
 void drawScore(uint8_t x, uint8_t y);
+void drawSpaceship(uint8_t x, uint8_t y);
