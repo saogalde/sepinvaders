@@ -2,7 +2,7 @@
 #include "display/graphic_shapes.h"
 #include "display/ST7735_commands.h"
 
-Alien::Alien(uint8_t type, uint8_t x, uint8_t y){
+void Alien::initAlien(uint8_t type, uint8_t x, uint8_t y){
 	// this function initializes the alien position, and
 	// also defines its type. At the moment of instantiation
 	// the alien is automatically drawn on the screen.
@@ -26,7 +26,9 @@ Alien::Alien(uint8_t type, uint8_t x, uint8_t y){
 			sprite_1= sprite_type2_1;
 			break;
 	}
-	drawAlien(_x,_y);
+	drawAlien();
+	initialized=true;
+	destroyed=false;
 }
 
 void Alien::moveAlien(){
@@ -45,17 +47,17 @@ void Alien::moveAlien(){
 
 	if(movCounter != LATERAL_LIMIT) {
 		for(int i=0; i<ALIEN_X_SPEED; i++) {
-			for(int j=0; j<8; j++) {
+			for(int j=0; j<=8; j++) {
 				if(direction) {
 					drawPixel(x+i, y+j, ST7735_BLACK);
 				}
 				else {
-					drawPixel(x+i+(11-ALIEN_X_SPEED), y+j, ST7735_BLACK);
+					drawPixel(x+i+(12-ALIEN_X_SPEED), y+j, ST7735_BLACK);
 				}
 			}
 		}
-		for(int i=0; i<11; i++) {
-			for(int j=0; j<8; j++) {
+		for(int i=0; i<12; i++) {
+			for(int j=0; j<=8; j++) {
 				if(direction) {
 					if(alien[i]&(0x80>>j)) drawPixel(x+i+ALIEN_X_SPEED, y+j, ST7735_WHITE);
 					else drawPixel(x+i+ALIEN_X_SPEED, y+j, ST7735_BLACK);	
@@ -71,13 +73,13 @@ void Alien::moveAlien(){
 		movCounter++;
 	}
 	else {
-		for(int i=0; i<11; i++) {
+		for(int i=0; i<12; i++) {
 			for(int j=0; j<ALIEN_Y_SPEED; j++) {
 				drawPixel(x+i, y+j, ST7735_BLACK);
 			}
 		}
-		for(int i=0; i<11; i++) {
-			for(int j=0; j<8; j++) {
+		for(int i=0; i<12; i++) {
+			for(int j=0; j<=8; j++) {
 				if(alien[i]&(0x80>>j)) drawPixel(x+i, y+j+ALIEN_Y_SPEED, ST7735_WHITE);
 				else drawPixel(x+i, y+j+ALIEN_Y_SPEED, ST7735_BLACK);
 			}
@@ -88,14 +90,14 @@ void Alien::moveAlien(){
 	}
 }
 
-void Alien::drawAlien(uint8_t x, uint8_t y) {
-	x = x-6;
-	y = y+4;
+void Alien::drawAlien() {
+	uint8_t x = _x-6;
+	uint8_t y = _y+4;
 	const uint8_t* alien;
 	if(animationSprite) alien = sprite_0;
 	else alien = sprite_1;
 	
-	for(int i=0; i<13; i++){
+	for(int i=0; i<12; i++){
 		for(int j=0; j<8; j++){
 			if(alien[i]&(1<<j)) drawPixel(x+i, y-j, ST7735_WHITE);
 			else drawPixel(x+i, y-j, ST7735_BLACK);
