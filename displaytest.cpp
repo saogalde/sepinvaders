@@ -122,7 +122,7 @@ int main(void)
 	fillScreen(ST7735_BLACK);
 	drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
 	Timer_IO_Init();
-	sei();
+	sei();													// Enable global interruptions for timer
 	start_timer1();
 
 	createAliens();
