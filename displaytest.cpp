@@ -133,6 +133,10 @@ int main(void)
 	drawNumber(18,8,0);
 	for(int i=1;i<250;i++) {
 		moveAliens();
+		if(i==5)aliens[2].destroyedAlien(1,1);
+		if(i==10)aliens[12].destroyedAlien(1,1);
+		if(i==20)aliens[4].destroyedAlien(1,1);
+		if(i==30)aliens[9].destroyedAlien(1,1);
 		_delay_ms(50);
 	}
 	while(1);
