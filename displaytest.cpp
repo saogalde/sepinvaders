@@ -63,13 +63,15 @@ static uint8_t SpaceshipPos[2] = {TFT_WIDTH/2,TFT_HEIGHT-20};
 
 Alien aliens[NUMBER_OF_ALIENS];
 volatile uint8_t currentLevel = 1;
+volatile int scoreboard = 0;
 
 void createAliens(){
 	uint8_t type = 0;
 	int counter = NUMBER_OF_ALIENS-1;
 	for(int y=-2;y<3;y++){
 		for(int x=-3;x<2;x++){
-			aliens[counter--].initAlien(type, TFT_WIDTH/3+x*ALIEN_X_SEPARATION+POS_OFFSET, TFT_HEIGHT/3+y*ALIEN_Y_SEPARATION);
+			if (type == 2) aliens[counter--].initAlien(type, TFT_WIDTH/3+x*ALIEN_X_SEPARATION+POS_OFFSET, TFT_HEIGHT/3+y*ALIEN_Y_SEPARATION, ST7735_GREEN);
+			else aliens[counter--].initAlien(type, TFT_WIDTH/3+x*ALIEN_X_SEPARATION+POS_OFFSET, TFT_HEIGHT/3+y*ALIEN_Y_SEPARATION, ST7735_WHITE);
 		}
 		type++;
 		if(type>2) type=0;
@@ -112,7 +114,23 @@ void Timer_IO_Init(void) {
 	PORTC &= ~(1<<PORTC2);											/* clear */
 }
 
-/** The main function */
+void push_score(int scoreboard) {
+	drawNumber(18,8,scoreboard%10);
+	scoreboard /= 10;
+	drawNumber(12,8,scoreboard%10);
+	scoreboard /= 10;
+	drawNumber(6,8,scoreboard%10);
+	scoreboard /= 10;
+	drawNumber(0,8,scoreboard%10);
+}
+
+void update_scoreboard(uint8_t type){
+	if (type==0) scoreboard += 10;
+	else if (type==1) scoreboard += 20;
+	else if (type==2) scoreboard += 40;
+}
+
+/** The main function **/
 int main(void)
 {
 	// Initialises the serial communication interface
@@ -125,19 +143,34 @@ int main(void)
 	sei();													// Enable global interruptions for timer
 	start_timer1();
 
-	createAliens();
 	drawScore(0,0);
-	drawNumber(0,8,0);
-	drawNumber(6,8,0);
-	drawNumber(12,8,0);
-	drawNumber(18,8,0);
+	push_score(scoreboard);
+	
+	createAliens();
+	
 	for(int i=1;i<250;i++) {
 		moveAliens();
-		if(i==5)aliens[2].destroyedAlien(1,1);
-		if(i==10)aliens[12].destroyedAlien(1,1);
-		if(i==20)aliens[4].destroyedAlien(1,1);
-		if(i==30)aliens[9].destroyedAlien(1,1);
-		_delay_ms(50);
+		if(i==5) {
+			aliens[2].destroyedAlien(1,1);
+			update_scoreboard(aliens[2].getType());
+			push_score(scoreboard);
+		}
+		if(i==10) {
+			aliens[12].destroyedAlien(1,1);
+			update_scoreboard(aliens[12].getType());
+			push_score(scoreboard);
+		}
+		if(i==20) {
+			aliens[4].destroyedAlien(1,1);
+			update_scoreboard(aliens[4].getType());
+			push_score(scoreboard);
+		}
+		if(i==30) {
+			aliens[9].destroyedAlien(1,1);
+			update_scoreboard(aliens[9].getType());
+			push_score(scoreboard);
+		}
+		_delay_ms(500);
 	}
 	while(1);
 }// Test programs. The following sequence runs many different images over the display.

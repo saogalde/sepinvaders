@@ -26,10 +26,11 @@ const uint8_t sprite_ufo[18] ={0x04,0x0C,0x1E,0x3D,0x3E,0x3C,0x7C,0x74,0x7E,0x7E
 class Alien{
 	public:
 		Alien(): initialized(false), destroyed(false), targeted(false){};
-		void initAlien(uint8_t type, uint8_t x, uint8_t y);
+		void initAlien(uint8_t type, uint8_t x, uint8_t y, uint16_t col);
 		void moveAlien();
 		bool destroyedAlien(uint8_t x, uint8_t y);
 		void drawAlien();
+		uint8_t getType();
 		bool initialized;
 		bool destroyed;
 		bool targeted;

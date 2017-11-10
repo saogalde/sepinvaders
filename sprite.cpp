@@ -10,6 +10,7 @@ void drawGenericSprite(uint8_t x, uint8_t y, uint8_t x_length, const uint8_t *sp
 	for(int i=0; i<x_length; i++){
 		for(int j=0; j<8; j++){
 			if(sprite[i]&(1<<j)) drawPixel(x+i, y-j, color);
+			else drawPixel(x+i, y-j, ST7735_BLACK);
 		}
 	}
 }
