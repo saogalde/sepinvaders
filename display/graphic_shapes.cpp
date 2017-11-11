@@ -80,21 +80,26 @@
 void drawPixel(int16_t x, int16_t y, uint16_t color)
 {
 	// set address window
+	DC_LOW();
 	wc(ST7735_CASET); 	// Column addr set
+	DC_HIGH();
 	wd(0x00);
 	wd(x);				// XSTART 
 	wd(0x00);
 	wd(x);				// XEND
 	
+	DC_LOW();
 	wc(ST7735_RASET);	// Row addr set
+	DC_HIGH();
 	wd(0x00);
 	wd(y);				// YSTART
 	wd(0x00);
 	wd(y);				// YEND
 	
+	DC_LOW();
 	wc(ST7735_RAMWR);	// write to RAM
 	
-	
+	DC_HIGH();
 	wd((color>>8) & 0xff);
 	wd(color & 0xff);
 }

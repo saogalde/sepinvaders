@@ -24,8 +24,16 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <avr/io.h>
 
-
+#define DD_MOSI 	DDD3 // salida del AVR para escribir
+#define DD_SCK 		DDD5
+#define DD_SS_TFT 	DDD5
+#define DC_PIN		DDD3
+#define DC_HIGH()	PORTD |= (1<<DC_PIN)
+#define DC_LOW()	PORTD &= ~(1<<DC_PIN)
+#define CS_LOW()	PORTD &= ~(1<<DD_SS_TFT)
+#define CS_HIGH()	PORTD |= (1<<DD_SS_TFT)
 
 // The initialisation function. Call it once from your main() program before
 // issuing any SPI commands with the functions below!
@@ -35,14 +43,18 @@ void SPI_Master_Init(void);
 // Two macro defintions. They provide shortcuts for the function below. This
 // keeps the main program short and easy to read, but is just eye candy. Feel
 // free to ignore them and use the long call each single time.
-#define wc(DATA) SPI_Master_transmit_char(DATA, true)
-#define wd(DATA) SPI_Master_transmit_char(DATA, false)
+#define wc0(DATA) SPI_Master_transmit_char(DATA, true)
+#define wd0(DATA) SPI_Master_transmit_char(DATA, false)
+
+#define wc(DATA) SPI_Master_transmit_char_fast(DATA)
+#define wd(DATA) SPI_Master_transmit_char_fast(DATA)
 
 // The transmit function. Takes one character and transmits it over SPI.
 // It also controls the D/C line (commandmode), which is not part of the SPI
 // standard, but required by the ST7735 based display controller.
 // Note that it does NOT control the Chip Select (CS) line!
 void SPI_Master_transmit_char(uint8_t data, bool commandmode);
+void SPI_Master_transmit_char_fast(uint8_t data);
 
 
 #endif // _SPI_IMPLEMENT_ME_H_

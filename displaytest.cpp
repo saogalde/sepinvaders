@@ -35,12 +35,11 @@
 #include "sprite.h"
 #include "SPI/SPI_implement_me.h"
 #include "USART/USART_implement_me.h"
-
 #include "display/ST7735_commands.h"
 #include "display/graphic_shapes.h"
 
 #define NUMBER_OF_ALIENS	25 // 4x4 array
-#define POS_OFFSET			3
+#define POS_OFFSET			7
 
 /*Alien only1alien(0, TFT_WIDTH/3, TFT_HEIGHT/3);
 Alien only2alien(0, TFT_WIDTH/3+ALIEN_X_SEPARATION, TFT_HEIGHT/3);
@@ -70,8 +69,9 @@ void createAliens(){
 	int counter = NUMBER_OF_ALIENS-1;
 	for(int y=-2;y<3;y++){
 		for(int x=-3;x<2;x++){
-			if (type == 2) aliens[counter--].initAlien(type, TFT_WIDTH/3+x*ALIEN_X_SEPARATION+POS_OFFSET, TFT_HEIGHT/3+y*ALIEN_Y_SEPARATION, ST7735_GREEN);
-			else aliens[counter--].initAlien(type, TFT_WIDTH/3+x*ALIEN_X_SEPARATION+POS_OFFSET, TFT_HEIGHT/3+y*ALIEN_Y_SEPARATION, ST7735_WHITE);
+			//if (type == 2) aliens[counter--].initAlien(type, TFT_WIDTH/3+x*ALIEN_X_SEPARATION+POS_OFFSET, TFT_HEIGHT/3+y*ALIEN_Y_SEPARATION, ST7735_GREEN);
+			//else 
+			aliens[counter--].initAlien(type, TFT_WIDTH/3+x*ALIEN_X_SEPARATION+POS_OFFSET, TFT_HEIGHT/3+y*ALIEN_Y_SEPARATION, ST7735_WHITE);
 		}
 		type++;
 		if(type>2) type=0;
@@ -125,9 +125,10 @@ void push_score(int scoreboard) {
 }
 
 void update_scoreboard(uint8_t type){
-	if (type==0) scoreboard += 10;
-	else if (type==1) scoreboard += 20;
-	else if (type==2) scoreboard += 40;
+	if (type==ALIEN_0) scoreboard += 10;
+	else if (type==ALIEN_1) scoreboard += 20;
+	else if (type==ALIEN_2) scoreboard += 40;
+	push_score(scoreboard);
 }
 
 /** The main function **/
@@ -147,28 +148,24 @@ int main(void)
 	push_score(scoreboard);
 	
 	createAliens();
-	
+	_delay_ms(500);
 	for(int i=1;i<250;i++) {
 		moveAliens();
 		if(i==5) {
-			aliens[2].destroyedAlien(1,1);
+			aliens[2].destroyedAlien();
 			update_scoreboard(aliens[2].getType());
-			push_score(scoreboard);
 		}
 		if(i==10) {
-			aliens[12].destroyedAlien(1,1);
+			aliens[12].destroyedAlien();
 			update_scoreboard(aliens[12].getType());
-			push_score(scoreboard);
 		}
 		if(i==20) {
-			aliens[4].destroyedAlien(1,1);
+			aliens[4].destroyedAlien();
 			update_scoreboard(aliens[4].getType());
-			push_score(scoreboard);
 		}
 		if(i==30) {
-			aliens[9].destroyedAlien(1,1);
+			aliens[9].destroyedAlien();
 			update_scoreboard(aliens[9].getType());
-			push_score(scoreboard);
 		}
 		_delay_ms(500);
 	}

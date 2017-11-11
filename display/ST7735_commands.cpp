@@ -85,47 +85,47 @@ void ST7735_init(void)
 	// flow and understand this command sequence!
 	
 	// Initialisation sequence Rcmd1
-	wc(ST7735_SWRESET); _delay_ms(150);
-	wc(ST7735_SLPOUT);  _delay_ms(500); // <--- aqui!
-	wc(ST7735_FRMCTR1); wd(0x01); wd(0x2C); wd(0x2D);
-	wc(ST7735_FRMCTR2); wd(0x01); wd(0x2C); wd(0x2D);
-	wc(ST7735_FRMCTR3); wd(0x01); wd(0x2C); wd(0x2D); wd(0x01); wd(0x2C); wd(0x2D);
-	wc(ST7735_INVCTR);  wd(0x07);
-	wc(ST7735_PWCTR1);  wd(0xA2); wd(0x02); wd(0x84);
-	wc(ST7735_PWCTR2);  wd(0xC5);
-	wc(ST7735_PWCTR3);  wd(0x0A); wd(0x00);
-	wc(ST7735_PWCTR4);  wd(0x8A); wd(0x2A);
-	wc(ST7735_PWCTR5);  wd(0x8A); wd(0xEE);
-	wc(ST7735_VMCTR1);  wd(0x0E);
-	wc(ST7735_INVOFF);
-	wc(ST7735_MADCTL);  wd(0xC8);
-	wc(ST7735_COLMOD);  wd(0x05);
+	wc0(ST7735_SWRESET); _delay_ms(150);
+	wc0(ST7735_SLPOUT);  _delay_ms(500); // <--- aqui!
+	wc0(ST7735_FRMCTR1); wd0(0x01); wd0(0x2C); wd0(0x2D);
+	wc0(ST7735_FRMCTR2); wd0(0x01); wd0(0x2C); wd0(0x2D);
+	wc0(ST7735_FRMCTR3); wd0(0x01); wd0(0x2C); wd0(0x2D); wd0(0x01); wd0(0x2C); wd0(0x2D);
+	wc0(ST7735_INVCTR);  wd0(0x07);
+	wc0(ST7735_PWCTR1);  wd0(0xA2); wd0(0x02); wd0(0x84);
+	wc0(ST7735_PWCTR2);  wd0(0xC5);
+	wc0(ST7735_PWCTR3);  wd0(0x0A); wd0(0x00);
+	wc0(ST7735_PWCTR4);  wd0(0x8A); wd0(0x2A);
+	wc0(ST7735_PWCTR5);  wd0(0x8A); wd0(0xEE);
+	wc0(ST7735_VMCTR1);  wd0(0x0E);
+	wc0(ST7735_INVOFF);
+	wc0(ST7735_MADCTL);  wd0(0xC8);
+	wc0(ST7735_COLMOD);  wd0(0x05);
 	
 	// Initialisation sequence Rcmd2red
-	wc(ST7735_CASET);   wd(0x00); wd(0x00); wd(0x00); wd(0x7F);
-	wc(ST7735_RASET);   wd(0x00); wd(0x00); wd(0x00); wd(0x9F);
+	wc0(ST7735_CASET);   wd0(0x00); wd0(0x00); wd0(0x00); wd0(0x7F);
+	wc0(ST7735_RASET);   wd0(0x00); wd0(0x00); wd0(0x00); wd0(0x9F);
 	
 	// Initialisation sequence Rcmd3
-	wc(ST7735_GMCTRP1);	wd(0x02); wd(0x1c); wd(0x07); wd(0x12);
-	wd(0x37); wd(0x32); wd(0x29); wd(0x2D);
-	wd(0x29); wd(0x25); wd(0x2B); wd(0x39);
-	wd(0x00); wd(0x01); wd(0x03); wd(0x10);
-	wc(ST7735_GMCTRN1);	wd(0x03); wd(0x1d); wd(0x07); wd(0x06);
-	wd(0x2E); wd(0x2C); wd(0x29); wd(0x2D);
-	wd(0x2E); wd(0x2E); wd(0x37); wd(0x3F);
-	wd(0x00); wd(0x00); wd(0x02); wd(0x10);
-	wc(ST7735_NORON);   _delay_ms(10);
-	wc(ST7735_DISPON);  _delay_ms(100);
+	wc0(ST7735_GMCTRP1);	wd0(0x02); wd0(0x1c); wd0(0x07); wd0(0x12);
+	wd0(0x37); wd0(0x32); wd0(0x29); wd0(0x2D);
+	wd0(0x29); wd0(0x25); wd0(0x2B); wd0(0x39);
+	wd0(0x00); wd0(0x01); wd0(0x03); wd0(0x10);
+	wc0(ST7735_GMCTRN1);	wd0(0x03); wd0(0x1d); wd0(0x07); wd0(0x06);
+	wd0(0x2E); wd0(0x2C); wd0(0x29); wd0(0x2D);
+	wd0(0x2E); wd0(0x2E); wd0(0x37); wd0(0x3F);
+	wd0(0x00); wd0(0x00); wd0(0x02); wd0(0x10);
+	wc0(ST7735_NORON);   _delay_ms(10);
+	wc0(ST7735_DISPON);  _delay_ms(100);
 	
 	// Change MADCTL color filter
-	wc(ST7735_MADCTL);  wd(0xC0);
+	wc0(ST7735_MADCTL);  wd0(0xC0);
 	
 	// Set rotation to widescreen (horizontal).
 	// (0,0) is in the top left corner.
 	// x extends to the right.
 	// y extends to the bottom.
 	// Compare Adafruit_ST7735::setRotation and the datasheet for more info.
-	wc(ST7735_MADCTL);
+	wc0(ST7735_MADCTL);
 	//wd(MADCTL_MX | MADCTL_MV | MADCTL_RGB);
-	wd(MADCTL_MX | MADCTL_MY | MADCTL_RGB);
+	wd0(MADCTL_MX | MADCTL_MY | MADCTL_RGB);
 }

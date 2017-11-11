@@ -11,7 +11,7 @@ void Alien::initAlien(uint8_t type, uint8_t x, uint8_t y, uint16_t col){
 	_type = type;
 	color = col;
 	direction = 1;
-	animationSprite = 1;
+	animationSprite = 0;
 	movCounter = 0;
 	switch(_type){
 		case 0:
@@ -52,7 +52,8 @@ void Alien::moveAlien(){
 	}
 	else{
 		const uint8_t* alien;
-		
+		const uint8_t* prev_alien;
+		prev_alien = Animations[animationSprite];
 		animationSprite ^= (1<<0);
 		alien = Animations[animationSprite];
 
@@ -60,27 +61,35 @@ void Alien::moveAlien(){
 		uint8_t y = _y-4;
 
 		if(movCounter != LATERAL_LIMIT) {
-			alien = Animations[animationSprite^(1<<0)]; 
 			for(int i=0; i<ALIEN_X_SPEED; i++) {
 				for(int j=0; j<=8; j++) {
 					if(direction) {
-						if(alien[i]&(0x80>>j)) drawPixel(x+i, y+j, ST7735_BLACK);
+						if(prev_alien[i]&(0x80>>j)) drawPixel(x+i, y+j, ST7735_BLACK);
 					}
 					else {
-						if(alien[(12-ALIEN_X_SPEED)+i]&(0x80>>j)) drawPixel(x+i+(12-ALIEN_X_SPEED), y+j, ST7735_BLACK);
+						if(prev_alien[11-i]&(0x80>>j)) drawPixel(x+11-i, y+j, ST7735_BLACK);
 					}
 				}
 			}
-			alien = Animations[animationSprite];
 			for(int i=0; i<12; i++) {
 				for(int j=0; j<=8; j++) {
-					if(direction) {
-						if(alien[i]&(0x80>>j)) drawPixel(x+i+ALIEN_X_SPEED, y+j, color);
-						else drawPixel(x+i+ALIEN_X_SPEED, y+j, ST7735_BLACK);	
+					if (i<12-ALIEN_X_SPEED) {
+						if(direction) {
+							if((alien[i]&(0x80>>j)) && ( (prev_alien[i+ALIEN_X_SPEED]&(0x80>>j)) ==0 )) drawPixel(x+i+ALIEN_X_SPEED, y+j, color);
+							else if ( ((alien[i]&(0x80>>j)) ==0 ) && prev_alien[i+ALIEN_X_SPEED]&(0x80>>j) ) drawPixel(x+i+ALIEN_X_SPEED, y+j, ST7735_BLACK);	
+						}
+						else {
+							if((alien[11-i]&(0x80>>j)) && ( (prev_alien[11-i-ALIEN_X_SPEED]&(0x80>>j)) ==0 )) drawPixel(x+11-i-ALIEN_X_SPEED, y+j, color);
+							else if ( ((alien[11-i]&(0x80>>j)) ==0 ) && prev_alien[11-i-ALIEN_X_SPEED]&(0x80>>j) ) drawPixel(x+11-i-ALIEN_X_SPEED, y+j, ST7735_BLACK);	
+						}
 					}
 					else {
-						if(alien[i]&(0x80>>j)) drawPixel(x+i-ALIEN_X_SPEED, y+j, color);
-						else drawPixel(x+i-ALIEN_X_SPEED, y+j, ST7735_BLACK);
+						if(direction) {
+							if(alien[i]&(0x80>>j)) drawPixel(x+i+ALIEN_X_SPEED, y+j, color);
+						}
+						else {
+							if(alien[11-i]&(0x80>>j)) drawPixel(x+11-i-ALIEN_X_SPEED, y+j, color);
+						}
 					}
 				}
 			}
@@ -91,13 +100,18 @@ void Alien::moveAlien(){
 		else {
 			for(int i=0; i<12; i++) {
 				for(int j=0; j<ALIEN_Y_SPEED; j++) {
-					drawPixel(x+i, y+j, ST7735_BLACK);
+					if(prev_alien[i]&(0x80>>j)) drawPixel(x+i, y+j, ST7735_BLACK);
 				}
 			}
 			for(int i=0; i<12; i++) {
-				for(int j=0; j<=8; j++) {
-					if(alien[i]&(0x80>>j)) drawPixel(x+i, y+j+ALIEN_Y_SPEED, color);
-					else drawPixel(x+i, y+j+ALIEN_Y_SPEED, ST7735_BLACK);
+				for(int j=0; j<8; j++) {
+					if(j<8-ALIEN_Y_SPEED) {
+						if((alien[i]&(0x80>>j)) && ( (prev_alien[i]&(0x80>>(j+ALIEN_Y_SPEED))) ==0 )) drawPixel(x+i, y+j+ALIEN_Y_SPEED, color);
+						else if ( ((alien[i]&(0x80>>j)) ==0 ) && prev_alien[i]&(0x80>>(j+ALIEN_Y_SPEED)) ) drawPixel(x+i, y+j+ALIEN_Y_SPEED, ST7735_BLACK);	
+					}
+					else {
+						if(alien[i]&(0x80>>j)) drawPixel(x+i, y+j+ALIEN_Y_SPEED, color);
+					}
 				}
 			}
 			_y += ALIEN_Y_SPEED;
@@ -122,7 +136,7 @@ void Alien::drawAlien() {
 	}
 }
 
-bool Alien::destroyedAlien(uint8_t x, uint8_t y){ // until now, this is a 'destroyAlien' method
+bool Alien::destroyedAlien(){ // until now, this is a 'destroyAlien' method
 	sprite_0= sprite_destroy; // WARNING: ONLY THE POINTER IS BEING COPIED
 	sprite_1= sprite_destroy;
 	color = ST7735_RED;

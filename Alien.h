@@ -9,9 +9,14 @@
 #define ANIM_1				1
 #define ALIEN_X_SPEED		2
 #define ALIEN_Y_SPEED		4
-#define ALIEN_X_SEPARATION	13
+#define ALIEN_X_SEPARATION	14
 #define ALIEN_Y_SEPARATION	10
 #define LATERAL_LIMIT		28
+
+#define ALIEN_0				0
+#define ALIEN_1				1
+#define ALIEN_2				2
+
 
 const uint8_t sprite_type0_0[12] = {0,14,24,190,109,61,60,61,109,190,24,14};
 const uint8_t sprite_type0_1[12] = {0,120,29,190,108,60,60,60,108,190,29,120};
@@ -28,7 +33,7 @@ class Alien{
 		Alien(): initialized(false), destroyed(false), targeted(false){};
 		void initAlien(uint8_t type, uint8_t x, uint8_t y, uint16_t col);
 		void moveAlien();
-		bool destroyedAlien(uint8_t x, uint8_t y);
+		bool destroyedAlien();
 		void drawAlien();
 		uint8_t getType();
 		bool initialized;

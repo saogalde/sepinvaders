@@ -32,17 +32,6 @@
 
 #include "SPI_implement_me.h"
 
-#define DD_MOSI 	DDD3 // salida del AVR para escribir
-#define DD_SCK 		DDD5
-#define DD_SS_TFT 	DDD5
-#define DC_PIN		DDD3
-#define DC_HIGH()	PORTD |= (1<<DC_PIN)
-#define DC_LOW()	PORTD &= ~(1<<DC_PIN)
-#define CS_LOW()	PORTD &= ~(1<<DD_SS_TFT)
-#define CS_HIGH()	PORTD |= (1<<DD_SS_TFT)
-//#define DD_SS_SD 	PB1
-//#define DD_MISO DDRB
-
 
 // The initialisation function. Call it once from your main() program before
 // issuing any SPI commands with the functions below!
@@ -89,6 +78,15 @@ void SPI_Master_transmit_char(uint8_t data, bool commandmode)
 {/* Start transmission */
 	if(commandmode){DC_LOW();}
 	else{DC_HIGH();}
+	CS_LOW();
+	SPDR = data;
+	/* Wait for transmission complete */
+	while(!(SPSR & (1<<SPIF)));
+	CS_HIGH();
+}
+
+void SPI_Master_transmit_char_fast(uint8_t data)
+{/* Start transmission */
 	CS_LOW();
 	SPDR = data;
 	/* Wait for transmission complete */

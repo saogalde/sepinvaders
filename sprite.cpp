@@ -3,6 +3,7 @@
 #include "display/graphic_shapes.h"
 #include "USART/USART_implement_me.h"
 #include <avr/io.h>
+#include <stddef.h>						//import NULL
 
 void drawGenericSprite(uint8_t x, uint8_t y, uint8_t x_length, const uint8_t *sprite, uint16_t color){
 	//x = x-6;
@@ -16,7 +17,7 @@ void drawGenericSprite(uint8_t x, uint8_t y, uint8_t x_length, const uint8_t *sp
 }
 
 void drawNumber(uint8_t x, uint8_t y, uint8_t number){
-	const uint8_t *sprite;
+	const uint8_t *sprite = NULL;
 	switch(number){
 		case 0:
 			sprite = number0;
@@ -62,9 +63,11 @@ void drawScore(uint8_t x, uint8_t y){
 	drawGenericSprite(x,y,X_LENGTH_SCORE,sprite, ST7735_GREEN);
 }
 
-void drawPlayer(uint8_t x, uint8_t y, uint8_t whichPlayer){
-	const uint8_t *sprite = score;
-	drawGenericSprite(x,y,X_LENGTH_SCORE,sprite, ST7735_WHITE);
+void drawPlayer(uint8_t x, uint8_t y, uint8_t wichPlayer){
+	if (wichPlayer==0) {
+		const uint8_t *sprite = score;
+		drawGenericSprite(x,y,X_LENGTH_SCORE,sprite, ST7735_WHITE);
+	}
 }
 
 void drawSpaceship(uint8_t x, uint8_t y) {
