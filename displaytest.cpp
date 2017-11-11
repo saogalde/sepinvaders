@@ -41,19 +41,6 @@
 #define NUMBER_OF_ALIENS	25 // 4x4 array
 #define POS_OFFSET			7
 
-/*Alien only1alien(0, TFT_WIDTH/3, TFT_HEIGHT/3);
-Alien only2alien(0, TFT_WIDTH/3+ALIEN_X_SEPARATION, TFT_HEIGHT/3);
-Alien only3alien(0, TFT_WIDTH/3-ALIEN_X_SEPARATION, TFT_HEIGHT/3);
-Alien only4alien(0, TFT_WIDTH/3-2*ALIEN_X_SEPARATION, TFT_HEIGHT/3);
-Alien nly1alien(1, TFT_WIDTH/3, TFT_HEIGHT/3+ALIEN_Y_SEPARATION);
-Alien nly2alien(1, TFT_WIDTH/3+ALIEN_X_SEPARATION, TFT_HEIGHT/3+ALIEN_Y_SEPARATION);
-Alien nly3alien(1, TFT_WIDTH/3-ALIEN_X_SEPARATION, TFT_HEIGHT/3+ALIEN_Y_SEPARATION);
-Alien nly4alien(1, TFT_WIDTH/3-2*ALIEN_X_SEPARATION, TFT_HEIGHT/3+ALIEN_Y_SEPARATION);
-Alien ly1alien(2, TFT_WIDTH/3, TFT_HEIGHT/3-ALIEN_Y_SEPARATION);
-Alien ly2alien(2, TFT_WIDTH/3+ALIEN_X_SEPARATION, TFT_HEIGHT/3-ALIEN_Y_SEPARATION);
-Alien ly3alien(2, TFT_WIDTH/3-ALIEN_X_SEPARATION, TFT_HEIGHT/3-ALIEN_Y_SEPARATION);
-Alien ly4alien(2, TFT_WIDTH/3-2*ALIEN_X_SEPARATION, TFT_HEIGHT/3-ALIEN_Y_SEPARATION);*/
-
 // UART configuration
 #define BAUD	9600					// serial communication baud rate
 #define UBRR_VALUE F_CPU/16/BAUD-1
@@ -63,6 +50,7 @@ static uint8_t SpaceshipPos[2] = {TFT_WIDTH/2,TFT_HEIGHT-20};
 Alien aliens[NUMBER_OF_ALIENS];
 volatile uint8_t currentLevel = 1;
 volatile int scoreboard = 0;
+volatile int aliveAlians = NUMBER_OF_ALIENS;
 
 void createAliens(){
 	uint8_t type = 0;
@@ -83,9 +71,15 @@ void moveAliens(){
 		if(aliens[i].initialized && !aliens[i].destroyed){
 			aliens[i].moveAlien();
 		}
-
 	}
 }
+
+void delay_ms(int count) {
+	while(count--) {
+		_delay_ms(1);
+	}
+}
+
 
 void stop_timer1(void) {
 	TCCR1B &= ~((1<<CS10)|(1<<CS12));									/* CS => prescaler set to 64 */
@@ -125,10 +119,11 @@ void push_score(int scoreboard) {
 }
 
 void update_scoreboard(uint8_t type){
-	if (type==ALIEN_0) scoreboard += 10;
-	else if (type==ALIEN_1) scoreboard += 20;
+	if (type==ALIEN_0) scoreboard += 20;
+	else if (type==ALIEN_1) scoreboard += 10;
 	else if (type==ALIEN_2) scoreboard += 40;
 	push_score(scoreboard);
+	aliveAlians--;
 }
 
 /** The main function **/
@@ -148,8 +143,8 @@ int main(void)
 	push_score(scoreboard);
 	
 	createAliens();
-	_delay_ms(500);
-	for(int i=1;i<250;i++) {
+	_delay_ms(400);
+	for(int i=1;i<500;i++) {
 		moveAliens();
 		if(i==5) {
 			aliens[2].destroyedAlien();
@@ -167,7 +162,47 @@ int main(void)
 			aliens[9].destroyedAlien();
 			update_scoreboard(aliens[9].getType());
 		}
-		_delay_ms(500);
+		if(i==40) {
+			aliens[10].destroyedAlien();
+			update_scoreboard(aliens[10].getType());
+			aliens[0].destroyedAlien();
+			update_scoreboard(aliens[0].getType());
+			aliens[5].destroyedAlien();
+			update_scoreboard(aliens[5].getType());
+			aliens[20].destroyedAlien();
+			update_scoreboard(aliens[20].getType());
+		}
+		if(i==50) {
+			aliens[15].destroyedAlien();
+			update_scoreboard(aliens[15].getType());
+			aliens[16].destroyedAlien();
+			update_scoreboard(aliens[16].getType());
+			aliens[17].destroyedAlien();
+			update_scoreboard(aliens[17].getType());
+			aliens[18].destroyedAlien();
+			update_scoreboard(aliens[18].getType());
+			aliens[19].destroyedAlien();
+			update_scoreboard(aliens[19].getType());
+		}
+		if(i==60) {
+			aliens[21].destroyedAlien();
+			update_scoreboard(aliens[21].getType());
+			aliens[22].destroyedAlien();
+			update_scoreboard(aliens[22].getType());
+			aliens[23].destroyedAlien();
+			update_scoreboard(aliens[23].getType());
+			aliens[24].destroyedAlien();
+			update_scoreboard(aliens[24].getType());
+		}
+		if(i==70) {
+			for(uint8_t i=0; i<14; i++){
+				if (!aliens[i].destroyed) {
+					aliens[i].destroyedAlien();
+					update_scoreboard(aliens[i].getType());
+				}
+			}
+		}
+		delay_ms(aliveAlians*10);
 	}
 	while(1);
 }// Test programs. The following sequence runs many different images over the display.
