@@ -2,6 +2,7 @@
 #include "display/graphic_shapes.h"
 #include "display/ST7735_commands.h"
 
+
 void Alien::initAlien(uint8_t type, uint8_t x, uint8_t y, uint16_t col){
 	// this function initializes the alien position, and
 	// also defines its type. At the moment of instantiation
@@ -147,4 +148,12 @@ bool Alien::destroyedAlien(){ // until now, this is a 'destroyAlien' method
 
 uint8_t Alien::getType() {
 	return _type;
+}
+
+uint8_t Alien::getX(){
+	return _x;
+}
+
+uint8_t Alien::getY(){
+	return _y;
 }

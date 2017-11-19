@@ -36,6 +36,8 @@ class Alien{
 		bool destroyedAlien();
 		void drawAlien();
 		uint8_t getType();
+		uint8_t getX();
+		uint8_t getY();
 		bool initialized;
 		bool destroyed;
 		bool targeted;

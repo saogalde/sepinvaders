@@ -79,7 +79,5 @@ void drawSpaceship(uint8_t x, uint8_t y) {
 			if(ship[i]&(0x80>>j)) drawPixel(x+i, y+j, ST7735_WHITE);
 			else drawPixel(x+i, y+j, ST7735_BLACK);
 		}
-	}
-	TCCR1B |= (1<<CS10)|(1<<CS12);	
-	
+	}	
 }

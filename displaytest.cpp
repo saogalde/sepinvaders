@@ -32,7 +32,9 @@
 #include <stdlib.h>
 
 #include "Alien.h"
+#include "Shoot.h"
 #include "sprite.h"
+//#include "splashscreen.h"
 #include "SPI/SPI_implement_me.h"
 #include "USART/USART_implement_me.h"
 #include "display/ST7735_commands.h"
@@ -40,17 +42,48 @@
 
 #define NUMBER_OF_ALIENS	25 // 4x4 array
 #define POS_OFFSET			7
+#define KILLING_OFFSET_Y	3
+#define KILLING_OFFSET_X	6
 
 // UART configuration
 #define BAUD	9600					// serial communication baud rate
 #define UBRR_VALUE F_CPU/16/BAUD-1
 
+/* ONLY FOR DEBUGGING!!! */
+#include "USART/USART_implement_me.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+
+char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
+  char fmt[20];
+
+  int whole = val;
+  float mantissa = val - whole;
+
+  int32_t frac = mantissa * powf(10, prec);
+  if(frac < 0) frac = -frac;
+
+  sprintf(fmt, "%%0%dd.%%0%dd", width, prec);
+  sprintf(sout, fmt, whole, frac);
+  return sout;
+}
+/* END OF DEBUGGING */
+
+
+
+
+/*	GLOBAL VARIABLES	*/
 static uint8_t SpaceshipPos[2] = {TFT_WIDTH/2,TFT_HEIGHT-20};
 
 Alien aliens[NUMBER_OF_ALIENS];
+Shoot shootplayer;
 volatile uint8_t currentLevel = 1;
 volatile int scoreboard = 0;
-volatile int aliveAlians = NUMBER_OF_ALIENS;
+volatile int aliveAliens = NUMBER_OF_ALIENS;
+/* END OF DEFINITION OF GLOBAL VARIABLES */
+
+
 
 void createAliens(){
 	uint8_t type = 0;
@@ -82,11 +115,11 @@ void delay_ms(int count) {
 
 
 void stop_timer1(void) {
-	TCCR1B &= ~((1<<CS10)|(1<<CS12));									/* CS => prescaler set to 64 */
+	TCCR1B &= ~(1<<CS11);								// CS => prescaler set to 64 
 }
 
 void start_timer1(void) {
-	TCCR1B |= (1<<CS10)|(1<<CS12);									/* CS => prescaler set to 64 */
+	TCCR1B |= (1<<CS11);									// CS => prescaler set to 64 
 }
 
 
@@ -94,18 +127,24 @@ void Timer_IO_Init(void) {
 	TCCR1B |= (1 << WGM12);
 	TIMSK1 |= (1 << OCIE1A);
 	//OCR1A   = 1562;
-	OCR1A   = 0xAFFF;
-	//TCCR1B |= (1<<CS10)|(1<<CS12);									/* CS => prescaler set to 64 */
-	TCCR1B |= (1<<CS11);									/* CS => prescaler set to 64 */
 
-	DDRC &= ~(1<<DDC0);												/* Input button */
-	PORTC |= (1<<PORTC0);											/* pull-pu */
+	OCR1A   = 0xAFFF;  //<-------------- deleted for testing
+	//OCR1A = 1000;
+	
+	//TCCR1B |= (1<<CS10)|(1<<CS12);		//NO ACTIVAR!!! CS => prescaler set to 64
+	TCCR1B |= (1<<CS11);									// CS => prescaler set to 64
 
-	DDRC &= ~(1<<DDC1);												/* Input button */
-	PORTC |= (1<<PORTC1);											/* pull-pu */
+	DDRC &= ~(1<<DDC0);												// Input button 
+	PORTC |= (1<<PORTC0);											// pull-pu 
 
-	DDRC |= (1<<DDC2);												/* output button */
-	PORTC &= ~(1<<PORTC2);											/* clear */
+	DDRC &= ~(1<<DDC1);												// Input button 
+	PORTC |= (1<<PORTC1);											// pull-pu 
+
+	DDRC &= ~(1<<DDC2);												// Input button 
+	PORTC |= (1<<PORTC2);											// pull-pu 
+
+	DDRC |= (1<<DDC3);												// output button 
+	PORTC &= ~(1<<PORTC3);											// clear 
 }
 
 void push_score(int scoreboard) {
@@ -123,7 +162,31 @@ void update_scoreboard(uint8_t type){
 	else if (type==ALIEN_1) scoreboard += 10;
 	else if (type==ALIEN_2) scoreboard += 40;
 	push_score(scoreboard);
-	aliveAlians--;
+	aliveAliens--;
+}
+
+char checkDeadAlien(uint8_t x, uint8_t y){
+	uint8_t coords[2] = {x,y};
+	for(uint8_t i=0; i<NUMBER_OF_ALIENS; i++){
+		if(aliens[i].initialized && !aliens[i].destroyed && !aliens[i].targeted){
+			/* DEBUG SECTION *
+			char t_str[30];
+			sprintf(t_str, "COMP IF: %d<=%d<=%d\n", coords[0]-KILLING_OFFSET_X, aliens[i].getX(),coords[0]+KILLING_OFFSET_X);
+			USART_Transmit_String(t_str);
+			sprintf(t_str, "COMP IF: %d<=%d<=%d\n", coords[1]-KILLING_OFFSET_Y, aliens[i].getY(),coords[1]+KILLING_OFFSET_Y);
+			USART_Transmit_String(t_str);
+			USART_Transmit_String("--------------------------\n");
+			/* END DEBUG */
+
+			if(aliens[i].getX()<=coords[0]+KILLING_OFFSET_X && aliens[i].getX()>=coords[0]-KILLING_OFFSET_X){
+				if(aliens[i].getY()<=coords[1]+KILLING_OFFSET_Y && aliens[i].getY()>=coords[1]-KILLING_OFFSET_Y){
+					aliens[i].destroyedAlien();
+					shootplayer.setTargetReached();
+					return 0;
+				}
+			}
+		}
+	}
 }
 
 /** The main function **/
@@ -134,17 +197,31 @@ int main(void)
 	SPI_Master_Init();
 	ST7735_init();
 	fillScreen(ST7735_BLACK);
+	//splashDrawer();
+	_delay_ms(200);
 	drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
-	Timer_IO_Init();
-	sei();													// Enable global interruptions for timer
-	start_timer1();
+	//initTimer1Hz();
+												// Enable global interruptions for timer
+	//start_timer1();
+	shootplayer.initShoot(0,SpaceshipPos[0], SpaceshipPos[1],ST7735_WHITE);
 
 	drawScore(0,0);
 	push_score(scoreboard);
-	
+
 	createAliens();
+	//aliens[0].destroyedAlien();
 	_delay_ms(400);
-	for(int i=1;i<500;i++) {
+	Timer_IO_Init();
+	sei();		
+	/*moveAliens();
+	_delay_ms(100);
+	moveAliens();
+	_delay_ms(100);
+	moveAliens();
+	_delay_ms(100);
+	moveAliens();
+	_delay_ms(100);*/
+	/*for(int i=1;i<500;i++) {
 		moveAliens();
 		if(i==5) {
 			aliens[2].destroyedAlien();
@@ -152,7 +229,7 @@ int main(void)
 		}
 		if(i==10) {
 			aliens[12].destroyedAlien();
-			update_scoreboard(aliens[12].getType());
+			update_scoreboard(aliens[12].getType());	
 		}
 		if(i==20) {
 			aliens[4].destroyedAlien();
@@ -202,22 +279,29 @@ int main(void)
 				}
 			}
 		}
-		delay_ms(aliveAlians*10);
-	}
+		delay_ms(aliveAliens*10);
+	}*/
 	while(1);
 }// Test programs. The following sequence runs many different images over the display.
 
 
 ISR(TIMER1_COMPA_vect) {
 	if(!(PINC & (1<<PINC0))) {
-		stop_timer1();
+		//stop_timer1();
 		SpaceshipPos[0] -= 2;
 		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
 	}
 	else if (!(PINC & (1<<PINC1))) {
-		stop_timer1();
+		//stop_timer1();
 		SpaceshipPos[0] += 2;
 		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
 	}
-	PORTC ^= (1<<PC2);
+	else if (!(PINC & (1<<PINC2))) {
+		if(!shootplayer.shooting)shootplayer.initShoot(0,SpaceshipPos[0], SpaceshipPos[1],ST7735_WHITE);
+	}
+	if(shootplayer.shooting){
+		shootplayer.moveShoot();
+		checkDeadAlien(shootplayer.getX(), shootplayer.getY());
+	}
+	PORTC ^= (1<<PC3);
 }
