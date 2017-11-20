@@ -81,6 +81,8 @@ Shoot shootplayer;
 volatile uint8_t currentLevel = 1;
 volatile int scoreboard = 0;
 volatile int aliveAliens = NUMBER_OF_ALIENS;
+volatile uint16_t alienspeed = 255;
+//volatile int 
 /* END OF DEFINITION OF GLOBAL VARIABLES */
 
 
@@ -147,6 +149,16 @@ void Timer_IO_Init(void) {
 	PORTC &= ~(1<<PORTC3);											// clear 
 }
 
+void Timer_Aliens_Init(void){
+	DDRD |= (1<<DDD0);												// output button 
+	PORTD &= ~(1<<PD0);											// clear 
+	OCR0A = 255;
+	TCCR0A |= (1 << COM0A1); 
+	TCCR0A |= (1 << WGM01);
+	TIMSK0 |= (1 << OCIE0A);
+	TCCR0B |= (1 << CS01)|(1 << CS00);
+}
+
 void push_score(int scoreboard) {
 	drawNumber(18,8,scoreboard%10);
 	scoreboard /= 10;
@@ -182,6 +194,9 @@ char checkDeadAlien(uint8_t x, uint8_t y){
 				if(aliens[i].getY()<=coords[1]+KILLING_OFFSET_Y && aliens[i].getY()>=coords[1]-KILLING_OFFSET_Y){
 					aliens[i].destroyedAlien();
 					shootplayer.setTargetReached();
+					update_scoreboard(aliens[i].getType());
+					if(alienspeed>40) alienspeed = aliveAliens*10;
+					else alienspeed = 40; 
 					return 0;
 				}
 			}
@@ -198,12 +213,10 @@ int main(void)
 	ST7735_init();
 	fillScreen(ST7735_BLACK);
 	//splashDrawer();
-	_delay_ms(200);
 	drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
 	//initTimer1Hz();
 												// Enable global interruptions for timer
 	//start_timer1();
-	shootplayer.initShoot(0,SpaceshipPos[0], SpaceshipPos[1],ST7735_WHITE);
 
 	drawScore(0,0);
 	push_score(scoreboard);
@@ -212,6 +225,8 @@ int main(void)
 	//aliens[0].destroyedAlien();
 	_delay_ms(400);
 	Timer_IO_Init();
+	//stop_timer1();
+	Timer_Aliens_Init();
 	sei();		
 	/*moveAliens();
 	_delay_ms(100);
@@ -304,4 +319,21 @@ ISR(TIMER1_COMPA_vect) {
 		checkDeadAlien(shootplayer.getX(), shootplayer.getY());
 	}
 	PORTC ^= (1<<PC3);
+	//PORTD ^= (1<<PC0);
+}
+
+volatile uint8_t coun = 0;
+ISR(TIMER0_COMPA_vect){
+	coun++;
+	/* DEBUG SECTION *
+			char t_str[30];
+			sprintf(t_str, "ALIENSPEED %d\n", alienspeed);
+			USART_Transmit_String(t_str);
+			USART_Transmit_String("--------------------------\n");
+			/* END DEBUG */
+	if(coun==alienspeed){
+		coun = 0;
+		PORTD ^= (1<<PD0);
+		moveAliens();
+	}
 }

@@ -1,0 +1,1 @@
+avrcompile Alien.cpp sprite.cpp displaytest.cpp display/ST7735_commands.cpp display/graphic_shapes.cpp SPI/SPI_implement_me.cpp USART/USART_implement_me.cpp
