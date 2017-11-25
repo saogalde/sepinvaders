@@ -234,15 +234,10 @@ int main(void)
 	Timer_Sound_Init();
 	sei();		
 	
-	while(1) {
+	while(1);
 
-<<<<<<< HEAD
-	}
 }
-
-=======
 volatile uint16_t coun = 0;
->>>>>>> 795ceef850b5ad89fb83ddae53867fed7da6a4c4
 ISR(TIMER1_COMPA_vect) {
 	if(!(PINC & (1<<PINC0))) {
 		//stop_timer1();
