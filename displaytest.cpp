@@ -91,7 +91,6 @@ Shoot shootplayer;
 volatile uint8_t lives = LIVES;
 volatile uint8_t currentLevel = 1;
 volatile int scoreboard = 0;
-//eeprom_update_word (( uint16_t *) 0, 986 );	//write code
 volatile int hi_score = (int) eeprom_read_word (( uint16_t *) 0);
 volatile int aliveAliens = NUMBER_OF_ALIENS;
 volatile uint16_t coun = 0;
@@ -287,9 +286,15 @@ void checkDeadAlien(uint8_t x, uint8_t y){
 void initLevel(uint8_t level){
 	fillScreen(ST7735_BLACK);
 	//splashDrawer();
-	drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
+	drawSpaceship(SpaceshipPos[0], SpaceshipPos[1],ST7735_WHITE);
 	drawScore(0,0);
-	push_score(scoreboard);
+	init_hi_score();
+	drawFastHLine(0,148,TFT_WIDTH,ST7735_GREEN);
+	push_score(0,8,scoreboard);
+	for(int i=0; i<LIVES; i++) {
+		drawSpaceship(15+14*i,TFT_HEIGHT-6, ST7735_GREEN);	
+	}
+	drawNumber(2,TFT_HEIGHT-10,lives);
 	stop_timer1();
 	stopSound_TIMER0();
 	stopSound_TIMER2();
@@ -305,14 +310,10 @@ void initLevel(uint8_t level){
 /** The main function **/
 int main(void)
 {
-	// Initialises the serial communication interface
+	//eeprom_update_word(( uint16_t*) 0, 986 );	//write code
 	USART_Init(BAUD);
 	SPI_Master_Init();
 	ST7735_init();
-	//initTimer1Hz();
-												// Enable global interruptions for timer
-	//start_timer1();
-
 	initLevel(currentLevel);
 	sei();		
 	
@@ -325,13 +326,13 @@ ISR(TIMER1_COMPA_vect) {
 		//stop_timer1();
 	if(SpaceshipPos[0]>PLAYER_LIMIT_X_LEFT){
 			SpaceshipPos[0] -= 2;
-			drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);}
+			drawSpaceship(SpaceshipPos[0], SpaceshipPos[1],ST7735_WHITE);}
 	}
 	else if (!(PINC & (1<<PINC1))) {
 		//stop_timer1();
 		if(SpaceshipPos[0]<PLAYER_LIMIT_X_RIGHT){
 			SpaceshipPos[0] += 2;
-			drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);}
+			drawSpaceship(SpaceshipPos[0], SpaceshipPos[1],ST7735_WHITE);}
 	}
 	else if (!(PINC & (1<<PINC2))) {
 		if(!shootplayer.shooting){
