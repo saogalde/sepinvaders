@@ -71,12 +71,12 @@ void ST7735_init(void)
 {
 	// Reset display once before trying anything else.
 	// Required by the driver IC!
-	DDRD |= (1<<DDD4);		// reset as output, too
-	PORTD |= (1 << DDD4);	// reset high
+	DDRC |= (1<<DDD4);		// reset as output, too
+	PORTC |= (1 << PC4);	// reset high
 	_delay_ms(500);
-	PORTD &= ~(1 << DDD4);	// reset low
+	PORTC &= ~(1 << PC4);	// reset low
 	_delay_ms(500);
-	PORTD |= (1 << DDD4);	// reset high
+	PORTC |= (1 << PC4);	// reset high
 	_delay_ms(500);
 	
 	

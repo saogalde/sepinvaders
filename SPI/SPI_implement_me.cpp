@@ -52,7 +52,7 @@ void SPI_Master_Init(void)
 {/* Set MOSI and SCK output, all others input */
 	DDRB |= (1<<DD_MOSI)|(1<<DD_SCK)|(1<<PB2);
 	// enable CS
-	DDRD |= (1<<DD_SS_TFT)|(1<<DC_PIN);
+	DDRC |= (1<<DD_SS_TFT)|(1<<DC_PIN);
 	/* Enable SPI, Master, set clock rate fck/4 */
 	SPCR = (1<<SPE)|(1<<MSTR);
 	CS_HIGH();

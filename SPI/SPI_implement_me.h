@@ -26,14 +26,14 @@
 #include <stdbool.h>
 #include <avr/io.h>
 
-#define DD_MOSI 	DDD3 // salida del AVR para escribir
-#define DD_SCK 		DDD5
-#define DD_SS_TFT 	DDD5
-#define DC_PIN		DDD3
-#define DC_HIGH()	PORTD |= (1<<DC_PIN)
-#define DC_LOW()	PORTD &= ~(1<<DC_PIN)
-#define CS_LOW()	PORTD &= ~(1<<DD_SS_TFT)
-#define CS_HIGH()	PORTD |= (1<<DD_SS_TFT)
+#define DD_MOSI 	DDC3 // salida del AVR para escribir
+#define DD_SCK 		DDC5
+#define DD_SS_TFT 	DDC5
+#define DC_PIN		DDC3
+#define DC_HIGH()	PORTC |= (1<<DC_PIN)
+#define DC_LOW()	PORTC &= ~(1<<DC_PIN)
+#define CS_LOW()	PORTC &= ~(1<<DD_SS_TFT)
+#define CS_HIGH()	PORTC |= (1<<DD_SS_TFT)
 
 // The initialisation function. Call it once from your main() program before
 // issuing any SPI commands with the functions below!
