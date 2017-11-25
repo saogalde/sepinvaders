@@ -26,8 +26,8 @@
 #include <stdbool.h>
 #include <avr/io.h>
 
-#define DD_MOSI 	DDD3 // salida del AVR para escribir
-#define DD_SCK 		DDD5
+#define DD_MOSI 	DDB3 // salida del AVR para escribir
+#define DD_SCK 		DDB5
 #define DD_SS_TFT 	DDD5
 #define DC_PIN		DDD3
 #define DC_HIGH()	PORTD |= (1<<DC_PIN)

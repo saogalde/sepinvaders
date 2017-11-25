@@ -3,6 +3,7 @@
 
 #define _LENGTH_SHOOTENEMY		3
 #define _LENGTH_SHOOTPLAYER		1
+#define _HEIHG_SHOOTPLAYER		3
 #define _MOVEMENT				2
 #define _UPPER_LIM				10
 
@@ -15,7 +16,7 @@ const uint8_t shootEnemy2[_LENGTH_SHOOTENEMY] = {0x08,0x1F,0x08}; // type 2
 
 class Shoot{
 	public:
-		Shoot(): movCounter(0), shooting(false){};
+		Shoot(): shooting(false){};
 		void initShoot(uint8_t type, uint8_t x, uint8_t y, uint16_t color);
 		void moveShoot();
 		void drawShoot();
@@ -30,8 +31,8 @@ class Shoot{
 		bool shooting;
 
 	private:
-		uint8_t _type, _x, _y, movCounter; 	// type of shoot (0: player, 1: enemy1, 2: enemy2)
-											// position coordinates
+		uint8_t _type, _x, _y; 	// type of shoot (0: player, 1: enemy1, 2: enemy2) // position coordinates
+		uint8_t movCounter;
 		uint16_t _color;
 		uint8_t direction; 		// direction of movement
 		char xlim;

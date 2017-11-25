@@ -177,17 +177,17 @@ void update_scoreboard(uint8_t type){
 	aliveAliens--;
 }
 
-char checkDeadAlien(uint8_t x, uint8_t y){
+void checkDeadAlien(uint8_t x, uint8_t y){
 	uint8_t coords[2] = {x,y};
 	for(uint8_t i=0; i<NUMBER_OF_ALIENS; i++){
 		if(aliens[i].initialized && !aliens[i].destroyed && !aliens[i].targeted){
-			/* DEBUG SECTION *
-			char t_str[30];
+			/* DEBUG SECTION */
+			/* char t_str[30];
 			sprintf(t_str, "COMP IF: %d<=%d<=%d\n", coords[0]-KILLING_OFFSET_X, aliens[i].getX(),coords[0]+KILLING_OFFSET_X);
 			USART_Transmit_String(t_str);
 			sprintf(t_str, "COMP IF: %d<=%d<=%d\n", coords[1]-KILLING_OFFSET_Y, aliens[i].getY(),coords[1]+KILLING_OFFSET_Y);
 			USART_Transmit_String(t_str);
-			USART_Transmit_String("--------------------------\n");
+			USART_Transmit_String("--------------------------\n"); */
 			/* END DEBUG */
 
 			if(aliens[i].getX()<=coords[0]+KILLING_OFFSET_X && aliens[i].getX()>=coords[0]-KILLING_OFFSET_X){
@@ -197,10 +197,15 @@ char checkDeadAlien(uint8_t x, uint8_t y){
 					update_scoreboard(aliens[i].getType());
 					if(alienspeed>40) alienspeed = aliveAliens*10;
 					else alienspeed = 40; 
-					return 0;
+					//alienspeed = aliveAliens*10;
+					//return 0;
 				}
 			}
 		}
+	}
+	if (coords[1] < 25) {
+		shootplayer.setTargetReached();
+		shootplayer.eraseShoot();
 	}
 }
 
@@ -228,77 +233,11 @@ int main(void)
 	//stop_timer1();
 	Timer_Aliens_Init();
 	sei();		
-	/*moveAliens();
-	_delay_ms(100);
-	moveAliens();
-	_delay_ms(100);
-	moveAliens();
-	_delay_ms(100);
-	moveAliens();
-	_delay_ms(100);*/
-	/*for(int i=1;i<500;i++) {
-		moveAliens();
-		if(i==5) {
-			aliens[2].destroyedAlien();
-			update_scoreboard(aliens[2].getType());
-		}
-		if(i==10) {
-			aliens[12].destroyedAlien();
-			update_scoreboard(aliens[12].getType());	
-		}
-		if(i==20) {
-			aliens[4].destroyedAlien();
-			update_scoreboard(aliens[4].getType());
-		}
-		if(i==30) {
-			aliens[9].destroyedAlien();
-			update_scoreboard(aliens[9].getType());
-		}
-		if(i==40) {
-			aliens[10].destroyedAlien();
-			update_scoreboard(aliens[10].getType());
-			aliens[0].destroyedAlien();
-			update_scoreboard(aliens[0].getType());
-			aliens[5].destroyedAlien();
-			update_scoreboard(aliens[5].getType());
-			aliens[20].destroyedAlien();
-			update_scoreboard(aliens[20].getType());
-		}
-		if(i==50) {
-			aliens[15].destroyedAlien();
-			update_scoreboard(aliens[15].getType());
-			aliens[16].destroyedAlien();
-			update_scoreboard(aliens[16].getType());
-			aliens[17].destroyedAlien();
-			update_scoreboard(aliens[17].getType());
-			aliens[18].destroyedAlien();
-			update_scoreboard(aliens[18].getType());
-			aliens[19].destroyedAlien();
-			update_scoreboard(aliens[19].getType());
-		}
-		if(i==60) {
-			aliens[21].destroyedAlien();
-			update_scoreboard(aliens[21].getType());
-			aliens[22].destroyedAlien();
-			update_scoreboard(aliens[22].getType());
-			aliens[23].destroyedAlien();
-			update_scoreboard(aliens[23].getType());
-			aliens[24].destroyedAlien();
-			update_scoreboard(aliens[24].getType());
-		}
-		if(i==70) {
-			for(uint8_t i=0; i<14; i++){
-				if (!aliens[i].destroyed) {
-					aliens[i].destroyedAlien();
-					update_scoreboard(aliens[i].getType());
-				}
-			}
-		}
-		delay_ms(aliveAliens*10);
-	}*/
-	while(1);
-}// Test programs. The following sequence runs many different images over the display.
+	
+	while(1) {
 
+	}
+}
 
 ISR(TIMER1_COMPA_vect) {
 	if(!(PINC & (1<<PINC0))) {
@@ -312,7 +251,7 @@ ISR(TIMER1_COMPA_vect) {
 		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
 	}
 	else if (!(PINC & (1<<PINC2))) {
-		if(!shootplayer.shooting)shootplayer.initShoot(0,SpaceshipPos[0], SpaceshipPos[1],ST7735_WHITE);
+		if(!shootplayer.shooting) shootplayer.initShoot(0,SpaceshipPos[0], SpaceshipPos[1]+1,ST7735_WHITE);
 	}
 	if(shootplayer.shooting){
 		shootplayer.moveShoot();
@@ -329,7 +268,7 @@ ISR(TIMER0_COMPA_vect){
 			char t_str[30];
 			sprintf(t_str, "ALIENSPEED %d\n", alienspeed);
 			USART_Transmit_String(t_str);
-			USART_Transmit_String("--------------------------\n");
+			USART_Transmit_String("--------------------------\n"); */
 			/* END DEBUG */
 	if(coun==alienspeed){
 		coun = 0;

@@ -1,3 +1,5 @@
+#define F_CPU	16000000UL
+
 #include "Shoot.h"
 #include "display/graphic_shapes.h"
 #include "display/ST7735_commands.h"
@@ -60,47 +62,41 @@ uint8_t Shoot::getY(){
 	return _y;
 }
 
-
-/***************** TO BE OPTIMIZED! **************/
-/***************** TO BE OPTIMIZED! **************/
-/***************** TO BE OPTIMIZED! **************/
-/***************** TO BE OPTIMIZED! **************/
-/***************** TO BE OPTIMIZED! **************/
-/***************** TO BE OPTIMIZED! **************/
-
-
-void Shoot::eraseShoot(){
-	uint8_t x = _x-1;
-	uint8_t y = _y-5;
-	/*if(xlim==1) USART_Transmit_String("VALOR CORRECTO\n");
-	char t_str[6];
-	sprintf(t_str, "x:%d\n", xlim);
-	USART_Transmit_String(t_str);*/
-	for(int i=0; i<xlim; i++){
-		for(int j=0; j<8; j++){
-			if(sprite[i]&(0x80>>j)) drawPixel(x+i, y+j, ST7735_BLACK);
+void Shoot::drawShoot() {
+	uint8_t x = _x;
+	uint8_t y = _y-7;
+	for(int i=0; i<xlim; i++) {
+		for(int j=0; j<_HEIHG_SHOOTPLAYER; j++) {
+			if(sprite[i]&(0x01<<j)) drawPixel(x+i, y+j, _color);
 		}
 	}
 }
 
 void Shoot::moveShoot(){
-	eraseShoot();
 	_y+=direction;
-	if(_y<=_UPPER_LIM) setTargetReached();
-	drawShoot();
+	uint8_t x = _x;
+	uint8_t y = _y-7;
+	if(_y<=_UPPER_LIM) {
+		//setTargetReached();
+	}
+	else {
+		for(int i=0; i<xlim; i++) {
+			for(int j=0; j<_MOVEMENT; j++) {
+				if(sprite[i]&(0x01<<j)) drawPixel(x+i, y+j, _color);
+			}
+			for(int j=0; j<_MOVEMENT; j++) {
+				if(sprite[i]&(0x01<<j)) drawPixel(x+i, y+j+_HEIHG_SHOOTPLAYER, ST7735_BLACK);
+			}
+		}
+	}
 }
 
-void Shoot::drawShoot() {
-	uint8_t x = _x-1;
-	uint8_t y = _y-8;
-	/*if(xlim==1) USART_Transmit_String("VALOR CORRECTO\n");
-	char t_str[6];
-	sprintf(t_str, "x:%d\n", xlim);
-	USART_Transmit_String(t_str);*/
-	for(int i=0; i<xlim; i++){
-		for(int j=0; j<8; j++){
-			if(sprite[i]&(0x80>>j)) drawPixel(x+i, y+j, _color);
-			else drawPixel(x+i, y+j, ST7735_BLACK);
+void Shoot::eraseShoot(){
+	uint8_t x = _x;
+	uint8_t y = _y-7;
+	for(int i=0; i<xlim; i++) {
+		for(int j=0; j<_HEIHG_SHOOTPLAYER; j++) {
+			if(sprite[i]&(0x01<<j)) drawPixel(x+i, y+j, ST7735_BLACK);
 		}
 	}
 }
