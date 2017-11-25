@@ -6,12 +6,12 @@
 #include <stddef.h>						//import NULL
 
 void drawGenericSprite(uint8_t x, uint8_t y, uint8_t x_length, const uint8_t *sprite, uint16_t color){
-	//x = x-6;
-	y = y+7;
+	x = x;
+	y = y-1;
 	for(int i=0; i<x_length; i++){
 		for(int j=0; j<8; j++){
-			if(sprite[i]&(1<<j)) drawPixel(x+i, y-j, color);
-			else drawPixel(x+i, y-j, ST7735_BLACK);
+			if(sprite[i]&(0x80>>j)) drawPixel(x+i, y+j, color);
+			else drawPixel(x+i, y+j, ST7735_BLACK);
 		}
 	}
 }
@@ -70,14 +70,25 @@ void drawPlayer(uint8_t x, uint8_t y, uint8_t wichPlayer){
 	}
 }
 
-void drawSpaceship(uint8_t x, uint8_t y) {
+void drawSpaceship(uint8_t x, uint8_t y, uint16_t color) {
 	uint8_t ship[15] = {0x00,0x00,0x07,0x0F,0x0F,0x0F,0x3F,0x7F,0x3F,0x0F,0x0F,0x0F,0x07,0x00,0x00};
 	x = x-7;
 	y = y-4;
 	for(int i=0; i<15; i++) {
 		for(int j=0; j<8; j++) {
-			if(ship[i]&(0x80>>j)) drawPixel(x+i, y+j, ST7735_WHITE);
+			if(ship[i]&(0x80>>j)) drawPixel(x+i, y+j, color);
 			else drawPixel(x+i, y+j, ST7735_BLACK);
+		}
+	}	
+}
+
+void deleteSpaceship(uint8_t x, uint8_t y) {
+	uint8_t ship[15] = {0x00,0x00,0x07,0x0F,0x0F,0x0F,0x3F,0x7F,0x3F,0x0F,0x0F,0x0F,0x07,0x00,0x00};
+	x = x-7;
+	y = y-4;
+	for(int i=0; i<15; i++) {
+		for(int j=0; j<8; j++) {
+			if(ship[i]&(0x80>>j)) drawPixel(x+i, y+j, ST7735_BLACK);
 		}
 	}	
 }

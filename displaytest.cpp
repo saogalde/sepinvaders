@@ -23,6 +23,7 @@
 // MCU Clock Speed - needed for delay.h
 #define F_CPU	16000000UL
 
+#include <avr/eeprom.h>
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -34,13 +35,13 @@
 #include "Alien.h"
 #include "Shoot.h"
 #include "sprite.h"
-//#include "splashscreen.h"
 #include "SPI/SPI_implement_me.h"
 #include "USART/USART_implement_me.h"
 #include "display/ST7735_commands.h"
 #include "display/graphic_shapes.h"
 
 #define NUMBER_OF_ALIENS	25 // 4x4 array
+#define LIVES 				3
 #define POS_OFFSET			7
 #define KILLING_OFFSET_Y	3
 #define KILLING_OFFSET_X	6
@@ -75,11 +76,13 @@ char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
 
 /*	GLOBAL VARIABLES	*/
 static uint8_t SpaceshipPos[2] = {TFT_WIDTH/2,TFT_HEIGHT-20};
-
 Alien aliens[NUMBER_OF_ALIENS];
 Shoot shootplayer;
+volatile uint8_t lives = LIVES;
 volatile uint8_t currentLevel = 1;
 volatile int scoreboard = 0;
+//eeprom_update_word (( uint16_t *) 0, 986 );	//write code
+volatile int hi_score = (int) eeprom_read_word (( uint16_t *) 0);
 volatile int aliveAliens = NUMBER_OF_ALIENS;
 volatile uint16_t alienspeed = 15;
 //volatile int 
@@ -159,22 +162,41 @@ void Timer_Sound_Init(void){
 	TCCR0B |= (1 << CS01); // prescaler /8
 }
 
-void push_score(int scoreboard) {
-	drawNumber(18,8,scoreboard%10);
+void push_score(int x,int y,int scoreboard) {
+	drawNumber(x+18,y,scoreboard%10);
 	scoreboard /= 10;
-	drawNumber(12,8,scoreboard%10);
+	drawNumber(x+12,y,scoreboard%10);
 	scoreboard /= 10;
-	drawNumber(6,8,scoreboard%10);
+	drawNumber(x+6,y,scoreboard%10);
 	scoreboard /= 10;
-	drawNumber(0,8,scoreboard%10);
+	drawNumber(x+0,y,scoreboard%10);
 }
 
 void update_scoreboard(uint8_t type){
 	if (type==ALIEN_0) scoreboard += 20;
 	else if (type==ALIEN_1) scoreboard += 10;
 	else if (type==ALIEN_2) scoreboard += 40;
-	push_score(scoreboard);
+	push_score(0,8,scoreboard);
 	aliveAliens--;
+}
+
+void init_hi_score(void) {
+	drawGenericSprite(TFT_WIDTH/2-20,0, 17, hi, ST7735_GREEN);
+	drawScore(TFT_WIDTH/2,0)
+	push_score(TFT_WIDTH/2-10,8,hi_score);		//update hi score
+}
+void update_lives(uint8_t player) {
+	if(player) {									//player 1
+		lives--;
+		deleteSpaceship(15+14*lives,TFT_HEIGHT-6);
+		drawNumber(2,TFT_HEIGHT-10,lives);
+	}
+	else {											//player 2
+
+	}
+	if(!lives) {									//GAME OVER							
+		//
+	}
 }
 
 void checkDeadAlien(uint8_t x, uint8_t y){
@@ -217,20 +239,20 @@ int main(void)
 	SPI_Master_Init();
 	ST7735_init();
 	fillScreen(ST7735_BLACK);
-	//splashDrawer();
-	drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
-	//initTimer1Hz();
-												// Enable global interruptions for timer
-	//start_timer1();
-
+	drawSpaceship(SpaceshipPos[0], SpaceshipPos[1], ST7735_WHITE);
 	drawScore(0,0);
-	push_score(scoreboard);
+	push_score(0,8,scoreboard);
+	init_hi_score();
+	drawFastHLine(0,148,TFT_WIDTH,ST7735_GREEN);
+
+	for(int i=0; i<LIVES; i++) {
+		drawSpaceship(15+14*i,TFT_HEIGHT-6, ST7735_GREEN);	
+	}
+	drawNumber(2,TFT_HEIGHT-10,lives);
 
 	createAliens();
-	//aliens[0].destroyedAlien();
 	_delay_ms(400);
 	Timer_IO_Init();
-	//stop_timer1();
 	Timer_Sound_Init();
 	sei();		
 	
@@ -242,12 +264,12 @@ ISR(TIMER1_COMPA_vect) {
 	if(!(PINC & (1<<PINC0))) {
 		//stop_timer1();
 		SpaceshipPos[0] -= 2;
-		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
+		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1], ST7735_WHITE);
 	}
 	else if (!(PINC & (1<<PINC1))) {
 		//stop_timer1();
 		SpaceshipPos[0] += 2;
-		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
+		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1], ST7735_WHITE);
 	}
 	else if (!(PINC & (1<<PINC2))) {
 		if(!shootplayer.shooting) shootplayer.initShoot(0,SpaceshipPos[0], SpaceshipPos[1]+1,ST7735_WHITE);
