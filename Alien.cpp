@@ -31,6 +31,7 @@ void Alien::initAlien(uint8_t type, uint8_t x, uint8_t y, uint16_t col){
 	drawAlien();
 	initialized=true;
 	destroyed=false;
+	targeted=false;
 }
 
 void Alien::moveAlien(){

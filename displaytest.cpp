@@ -43,8 +43,13 @@
 
 #define NUMBER_OF_ALIENS	25 // 4x4 array
 #define POS_OFFSET			7
-#define KILLING_OFFSET_Y	3
-#define KILLING_OFFSET_X	6
+#define KILLING_RANGE_Y	3
+#define KILLING_RANGE_X	6
+#define STARTING_ALIEN_SPEED	55
+#define PLAYER_LIMIT_X_LEFT 	5
+#define PLAYER_LIMIT_X_RIGHT 	122
+#define GAME_OVER_LIMIT_Y		130
+#define LEVEL_OFFSET			10
 
 // UART configuration
 #define BAUD	9600					// serial communication baud rate
@@ -52,7 +57,7 @@
 
 /* ONLY FOR DEBUGGING!!! *
 #include "USART/USART_implement_me.h"
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -82,25 +87,28 @@ Shoot shootplayer;
 volatile uint8_t currentLevel = 1;
 volatile int scoreboard = 0;
 volatile int aliveAliens = NUMBER_OF_ALIENS;
-volatile uint16_t alienspeed = 15;
+volatile uint16_t coun = 0;
+volatile uint16_t alienspeed = STARTING_ALIEN_SPEED;
 //volatile int 
 
 // declared in sound.h!
 extern volatile unsigned char *cursor;
 extern volatile uint16_t currentLength;
 extern volatile uint16_t soundCounter;
+
+void initLevel(uint8_t level);
 /* END OF DEFINITION OF GLOBAL VARIABLES */
 
 
 
-void createAliens(){
+void createAliens(uint8_t level){
 	uint8_t type = 0;
 	int counter = NUMBER_OF_ALIENS-1;
 	for(int y=-2;y<3;y++){
 		for(int x=-3;x<2;x++){
 			//if (type == 2) aliens[counter--].initAlien(type, TFT_WIDTH/3+x*ALIEN_X_SEPARATION+POS_OFFSET, TFT_HEIGHT/3+y*ALIEN_Y_SEPARATION, ST7735_GREEN);
 			//else 
-			aliens[counter--].initAlien(type, TFT_WIDTH/3+x*ALIEN_X_SEPARATION+POS_OFFSET, TFT_HEIGHT/3+y*ALIEN_Y_SEPARATION, ST7735_WHITE);
+			aliens[counter--].initAlien(type, TFT_WIDTH/3+x*ALIEN_X_SEPARATION+POS_OFFSET, TFT_HEIGHT/3+y*ALIEN_Y_SEPARATION+LEVEL_OFFSET*level, ST7735_WHITE);
 		}
 		type++;
 		if(type>2) type=0;
@@ -113,6 +121,23 @@ void moveAliens(){
 			aliens[i].moveAlien();
 		}
 	}
+}
+
+
+bool checkGameOver(){
+	for(uint8_t i=0; i<NUMBER_OF_ALIENS; i++){
+		if(aliens[i].initialized && !aliens[i].destroyed && !aliens[i].targeted){
+			/* DEBUG SECTION *
+			char t_str[30];
+			sprintf(t_str, "alienY %d\n", aliens[i].getY());
+			USART_Transmit_String(t_str);
+			/* END DEBUG */
+			if(aliens[i].getY()>=GAME_OVER_LIMIT_Y){
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 void delay_ms(int count) {
@@ -174,6 +199,7 @@ void Timer_Sound2_Init(void){
 }
 
 
+
 void push_score(int scoreboard) {
 	drawNumber(18,8,scoreboard%10);
 	scoreboard /= 10;
@@ -198,21 +224,29 @@ void checkDeadAlien(uint8_t x, uint8_t y){
 		if(aliens[i].initialized && !aliens[i].destroyed && !aliens[i].targeted){
 			/* DEBUG SECTION */
 			/* char t_str[30];
-			sprintf(t_str, "COMP IF: %d<=%d<=%d\n", coords[0]-KILLING_OFFSET_X, aliens[i].getX(),coords[0]+KILLING_OFFSET_X);
+			sprintf(t_str, "COMP IF: %d<=%d<=%d\n", coords[0]-KILLING_RANGE_X, aliens[i].getX(),coords[0]+KILLING_RANGE_X);
 			USART_Transmit_String(t_str);
-			sprintf(t_str, "COMP IF: %d<=%d<=%d\n", coords[1]-KILLING_OFFSET_Y, aliens[i].getY(),coords[1]+KILLING_OFFSET_Y);
+			sprintf(t_str, "COMP IF: %d<=%d<=%d\n", coords[1]-KILLING_RANGE_Y, aliens[i].getY(),coords[1]+KILLING_RANGE_Y);
 			USART_Transmit_String(t_str);
-			USART_Transmit_String("--------------------------\n"); */
+			USART_Transmit_String("--------------------------\n");
 			/* END DEBUG */
 
-			if(aliens[i].getX()<=coords[0]+KILLING_OFFSET_X && aliens[i].getX()>=coords[0]-KILLING_OFFSET_X){
-				if(aliens[i].getY()<=coords[1]+KILLING_OFFSET_Y && aliens[i].getY()>=coords[1]-KILLING_OFFSET_Y){
+			if(aliens[i].getX()<=coords[0]+KILLING_RANGE_X && aliens[i].getX()>=coords[0]-KILLING_RANGE_X){
+				if(aliens[i].getY()<=coords[1]+KILLING_RANGE_Y && aliens[i].getY()>=coords[1]-KILLING_RANGE_Y){
 					aliens[i].destroyedAlien();
 					shootplayer.setTargetReached();
 					update_scoreboard(aliens[i].getType());
 					playSound('k');
-					if(alienspeed>40) alienspeed = aliveAliens*10;
-					else alienspeed = 40; 
+					alienspeed -= 2;
+					if(aliveAliens == 0){
+						initLevel(++currentLevel);
+					}
+					//if(alienspeed<=20) alienspeed = 20;
+					/* DEBUG SECTION *
+					char t_str[30];
+					sprintf(t_str, "alienspeed %d\n", alienspeed);
+					USART_Transmit_String(t_str);
+					/* END DEBUG */
 					//alienspeed = aliveAliens*10;
 					//return 0;
 				}
@@ -225,6 +259,25 @@ void checkDeadAlien(uint8_t x, uint8_t y){
 	}
 }
 
+
+void initLevel(uint8_t level){
+	fillScreen(ST7735_BLACK);
+	//splashDrawer();
+	drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
+	drawScore(0,0);
+	push_score(scoreboard);
+	stop_timer1();
+	stopSound_TIMER0();
+	stopSound_TIMER2();
+	alienspeed = STARTING_ALIEN_SPEED;
+	createAliens(level-1);
+	_delay_ms(400);
+	Timer_IO_Init();
+	//stop_timer1();
+	Timer_Sound0_Init();
+	Timer_Sound2_Init();
+}
+
 /** The main function **/
 int main(void)
 {
@@ -232,39 +285,29 @@ int main(void)
 	USART_Init(BAUD);
 	SPI_Master_Init();
 	ST7735_init();
-	fillScreen(ST7735_BLACK);
-	//splashDrawer();
-	drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
 	//initTimer1Hz();
 												// Enable global interruptions for timer
 	//start_timer1();
 
-	drawScore(0,0);
-	push_score(scoreboard);
-
-	createAliens();
-	//aliens[0].destroyedAlien();
-	_delay_ms(400);
-	Timer_IO_Init();
-	//stop_timer1();
-	Timer_Sound0_Init();
-	Timer_Sound2_Init();
+	initLevel(currentLevel);
 	sei();		
 	
 	while(1);
 
 }
-volatile uint16_t coun = 0;
+
 ISR(TIMER1_COMPA_vect) {
 	if(!(PINC & (1<<PINC0))) {
 		//stop_timer1();
-		SpaceshipPos[0] -= 2;
-		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
+		if(SpaceshipPos[0]>PLAYER_LIMIT_X_LEFT){
+			SpaceshipPos[0] -= 2;
+			drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);}
 	}
 	else if (!(PINC & (1<<PINC1))) {
 		//stop_timer1();
-		SpaceshipPos[0] += 2;
-		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
+		if(SpaceshipPos[0]<PLAYER_LIMIT_X_RIGHT){
+			SpaceshipPos[0] += 2;
+			drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);}
 	}
 	else if (!(PINC & (1<<PINC2))) {
 		if(!shootplayer.shooting){
@@ -281,11 +324,16 @@ ISR(TIMER1_COMPA_vect) {
 	char t_str[30];
 	sprintf(t_str, "ALIENSPEED %d\n", alienspeed);
 	USART_Transmit_String(t_str);
-	USART_Transmit_String("--------------------------\n"); */
+	USART_Transmit_String("--------------------------\n"); 
 	/* END DEBUG */
-	if(coun==alienspeed){
+	if(coun>=alienspeed){
 		coun = 0;
 		moveAliens();
+		if(checkGameOver()){
+			fillScreen(ST7735_RED);
+			stop_timer1();
+			stopSound_TIMER0();
+			stopSound_TIMER2();}
 	}
 }
 

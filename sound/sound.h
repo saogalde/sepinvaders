@@ -1,5 +1,5 @@
 #include <avr/pgmspace.h>
-#include "explosion.h"
+//#include "explosion.h"
 #include "shoot.h"
 #include "invaderkilled.h"
 #include "tone_inv0.h"
@@ -49,12 +49,12 @@ void playSound(char opt){
 			soundCounter_TIMER0 = 0;
 			startSound_TIMER0();
 			break;
-		case 'e':
+		/*case 'e':
 			cursor_TIMER0 = (unsigned char*)explosion_data;
 			currentLength_TIMER0 = explosion_length;
 			soundCounter_TIMER0 = 0;
 			startSound_TIMER0();
-			break;
+			break;*/
 		// timer 2 sounds
 		case 0:
 			cursor_TIMER2 = (unsigned char*)tone_inv0_data;
