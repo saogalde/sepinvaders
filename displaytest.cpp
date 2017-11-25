@@ -205,15 +205,8 @@ void Timer_Sound2_Init(void){
 	//TCCR0B |= (1 << CS01); // prescaler /8
 }
 
-
-<<<<<<< HEAD
-
-void push_score(int scoreboard) {
-	drawNumber(18,8,scoreboard%10);
-=======
 void push_score(int x,int y,int scoreboard) {
 	drawNumber(x+18,y,scoreboard%10);
->>>>>>> cd95455593b0a0c470e631842485e4e599832340
 	scoreboard /= 10;
 	drawNumber(x+12,y,scoreboard%10);
 	scoreboard /= 10;
