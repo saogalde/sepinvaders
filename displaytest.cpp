@@ -34,6 +34,7 @@
 #include "Alien.h"
 #include "Shoot.h"
 #include "sprite.h"
+#include "sound/sound.h"
 //#include "splashscreen.h"
 #include "SPI/SPI_implement_me.h"
 #include "USART/USART_implement_me.h"
@@ -49,7 +50,7 @@
 #define BAUD	9600					// serial communication baud rate
 #define UBRR_VALUE F_CPU/16/BAUD-1
 
-/* ONLY FOR DEBUGGING!!! */
+/* ONLY FOR DEBUGGING!!! *
 #include "USART/USART_implement_me.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -83,6 +84,11 @@ volatile int scoreboard = 0;
 volatile int aliveAliens = NUMBER_OF_ALIENS;
 volatile uint16_t alienspeed = 15;
 //volatile int 
+
+// declared in sound.h!
+extern volatile unsigned char *cursor;
+extern volatile uint16_t currentLength;
+extern volatile uint16_t soundCounter;
 /* END OF DEFINITION OF GLOBAL VARIABLES */
 
 
@@ -149,15 +155,24 @@ void Timer_IO_Init(void) {
 	PORTC &= ~(1<<PORTC3);											// clear 
 }
 
-void Timer_Sound_Init(void){
+void Timer_Sound0_Init(void){
 	DDRD |= (1<<DDD0);												// output button 
 	PORTD &= ~(1<<PD0);											// clear 
 	OCR0A = 180; // approx 11kHz
 	TCCR0A |= (1 << COM0A1); 
 	TCCR0A |= (1 << WGM01);
 	TIMSK0 |= (1 << OCIE0A); // timer interrupt
-	TCCR0B |= (1 << CS01); // prescaler /8
+	//TCCR0B |= (1 << CS01); // prescaler /8
 }
+
+void Timer_Sound2_Init(void){
+	OCR0A = 180; // approx 11kHz
+	TCCR0A |= (1 << COM0A1); 
+	TCCR0A |= (1 << WGM01);
+	TIMSK0 |= (1 << OCIE0A); // timer interrupt
+	//TCCR0B |= (1 << CS01); // prescaler /8
+}
+
 
 void push_score(int scoreboard) {
 	drawNumber(18,8,scoreboard%10);
@@ -195,6 +210,7 @@ void checkDeadAlien(uint8_t x, uint8_t y){
 					aliens[i].destroyedAlien();
 					shootplayer.setTargetReached();
 					update_scoreboard(aliens[i].getType());
+					playSound('k');
 					if(alienspeed>40) alienspeed = aliveAliens*10;
 					else alienspeed = 40; 
 					//alienspeed = aliveAliens*10;
@@ -231,7 +247,8 @@ int main(void)
 	_delay_ms(400);
 	Timer_IO_Init();
 	//stop_timer1();
-	Timer_Sound_Init();
+	Timer_Sound0_Init();
+	Timer_Sound2_Init();
 	sei();		
 	
 	while(1);
@@ -250,32 +267,55 @@ ISR(TIMER1_COMPA_vect) {
 		drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);
 	}
 	else if (!(PINC & (1<<PINC2))) {
-		if(!shootplayer.shooting) shootplayer.initShoot(0,SpaceshipPos[0], SpaceshipPos[1]+1,ST7735_WHITE);
+		if(!shootplayer.shooting){
+			shootplayer.initShoot(0,SpaceshipPos[0], SpaceshipPos[1]+1,ST7735_WHITE);
+			playSound('s');
+		}
 	}
 	if(shootplayer.shooting){
 		shootplayer.moveShoot();
 		checkDeadAlien(shootplayer.getX(), shootplayer.getY());
 	}
-	PORTC ^= (1<<PC3);
-	//PORTD ^= (1<<PC0);
-
-
-
 	coun++;
 	/* DEBUG SECTION *
-			char t_str[30];
-			sprintf(t_str, "ALIENSPEED %d\n", alienspeed);
-			USART_Transmit_String(t_str);
-			USART_Transmit_String("--------------------------\n"); */
-			/* END DEBUG */
+	char t_str[30];
+	sprintf(t_str, "ALIENSPEED %d\n", alienspeed);
+	USART_Transmit_String(t_str);
+	USART_Transmit_String("--------------------------\n"); */
+	/* END DEBUG */
 	if(coun==alienspeed){
 		coun = 0;
-		//PORTD ^= (1<<PD0);
 		moveAliens();
 	}
 }
 
-//volatile uint8_t coun = 0;
 ISR(TIMER0_COMPA_vect){
-	//PORTD ^= (1<<PD0);
+	PORTB ^= (1<<PB0);
+	/* DEBUG SECTION *
+	char t_str[30];
+	sprintf(t_str, "soundcounter %d\n", soundCounter);
+	USART_Transmit_String(t_str);
+	/* END DEBUG */
+	PORTD = *(cursor_TIMER0+soundCounter_TIMER0);
+	soundCounter_TIMER0++;
+	
+	if(soundCounter_TIMER0 >= currentLength_TIMER0){ 
+		stopSound_TIMER0();
+		PORTD = 0;
+	}
+}
+
+ISR(TIMER2_COMPA_vect){
+	/* DEBUG SECTION *
+	char t_str[30];
+	sprintf(t_str, "soundcounter %d\n", soundCounter);
+	USART_Transmit_String(t_str);
+	/* END DEBUG */
+	PORTD = *(cursor_TIMER2+soundCounter_TIMER2);
+	soundCounter_TIMER2++;
+	
+	if(soundCounter_TIMER2 >= currentLength_TIMER2){ 
+		stopSound_TIMER2();
+		PORTD = 0;
+	}
 }
