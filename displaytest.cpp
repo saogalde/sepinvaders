@@ -23,6 +23,7 @@
 // MCU Clock Speed - needed for delay.h
 #define F_CPU	16000000UL
 
+#include <avr/eeprom.h>
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -36,12 +37,14 @@
 #include "sprite.h"
 #include "sound/sound.h"
 //#include "splashscreen.h"
+
 #include "SPI/SPI_implement_me.h"
 #include "USART/USART_implement_me.h"
 #include "display/ST7735_commands.h"
 #include "display/graphic_shapes.h"
 
 #define NUMBER_OF_ALIENS	25 // 4x4 array
+#define LIVES 				3
 #define POS_OFFSET			7
 #define KILLING_RANGE_Y	3
 #define KILLING_RANGE_X	6
@@ -55,7 +58,8 @@
 #define BAUD	9600					// serial communication baud rate
 #define UBRR_VALUE F_CPU/16/BAUD-1
 
-/* ONLY FOR DEBUGGING!!! *
+/* 
+ONLY FOR DEBUGGING!!!
 #include "USART/USART_implement_me.h"
 //#include <stdlib.h>
 #include <stdio.h>
@@ -74,6 +78,7 @@ char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
   sprintf(sout, fmt, whole, frac);
   return sout;
 }
+*/
 /* END OF DEBUGGING */
 
 
@@ -81,11 +86,13 @@ char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
 
 /*	GLOBAL VARIABLES	*/
 static uint8_t SpaceshipPos[2] = {TFT_WIDTH/2,TFT_HEIGHT-20};
-
 Alien aliens[NUMBER_OF_ALIENS];
 Shoot shootplayer;
+volatile uint8_t lives = LIVES;
 volatile uint8_t currentLevel = 1;
 volatile int scoreboard = 0;
+//eeprom_update_word (( uint16_t *) 0, 986 );	//write code
+volatile int hi_score = (int) eeprom_read_word (( uint16_t *) 0);
 volatile int aliveAliens = NUMBER_OF_ALIENS;
 volatile uint16_t coun = 0;
 volatile uint16_t alienspeed = STARTING_ALIEN_SPEED;
@@ -199,23 +206,47 @@ void Timer_Sound2_Init(void){
 }
 
 
+<<<<<<< HEAD
 
 void push_score(int scoreboard) {
 	drawNumber(18,8,scoreboard%10);
+=======
+void push_score(int x,int y,int scoreboard) {
+	drawNumber(x+18,y,scoreboard%10);
+>>>>>>> cd95455593b0a0c470e631842485e4e599832340
 	scoreboard /= 10;
-	drawNumber(12,8,scoreboard%10);
+	drawNumber(x+12,y,scoreboard%10);
 	scoreboard /= 10;
-	drawNumber(6,8,scoreboard%10);
+	drawNumber(x+6,y,scoreboard%10);
 	scoreboard /= 10;
-	drawNumber(0,8,scoreboard%10);
+	drawNumber(x+0,y,scoreboard%10);
 }
 
 void update_scoreboard(uint8_t type){
 	if (type==ALIEN_0) scoreboard += 20;
 	else if (type==ALIEN_1) scoreboard += 10;
 	else if (type==ALIEN_2) scoreboard += 40;
-	push_score(scoreboard);
+	push_score(0,8,scoreboard);
 	aliveAliens--;
+}
+
+void init_hi_score(void) {
+	drawGenericSprite(TFT_WIDTH/2-20,0, 17, hi, ST7735_GREEN);
+	drawScore(TFT_WIDTH/2,0);
+	push_score(TFT_WIDTH/2-10,8,hi_score);		//update hi score
+}
+void update_lives(uint8_t player) {
+	if(player) {									//player 1
+		lives--;
+		deleteSpaceship(15+14*lives,TFT_HEIGHT-6);
+		drawNumber(2,TFT_HEIGHT-10,lives);
+	}
+	else {											//player 2
+
+	}
+	if(!lives) {									//GAME OVER							
+		//
+	}
 }
 
 void checkDeadAlien(uint8_t x, uint8_t y){
@@ -299,7 +330,7 @@ int main(void)
 ISR(TIMER1_COMPA_vect) {
 	if(!(PINC & (1<<PINC0))) {
 		//stop_timer1();
-		if(SpaceshipPos[0]>PLAYER_LIMIT_X_LEFT){
+	if(SpaceshipPos[0]>PLAYER_LIMIT_X_LEFT){
 			SpaceshipPos[0] -= 2;
 			drawSpaceship(SpaceshipPos[0], SpaceshipPos[1]);}
 	}
@@ -320,7 +351,7 @@ ISR(TIMER1_COMPA_vect) {
 		checkDeadAlien(shootplayer.getX(), shootplayer.getY());
 	}
 	coun++;
-	/* DEBUG SECTION *
+	/* DEBUG SECTION 
 	char t_str[30];
 	sprintf(t_str, "ALIENSPEED %d\n", alienspeed);
 	USART_Transmit_String(t_str);
@@ -339,10 +370,10 @@ ISR(TIMER1_COMPA_vect) {
 
 ISR(TIMER0_COMPA_vect){
 	PORTB ^= (1<<PB0);
-	/* DEBUG SECTION *
+	/* DEBUG SECTION 
 	char t_str[30];
 	sprintf(t_str, "soundcounter %d\n", soundCounter);
-	USART_Transmit_String(t_str);
+	USART_Transmit_String(t_str); */
 	/* END DEBUG */
 	PORTD = *(cursor_TIMER0+soundCounter_TIMER0);
 	soundCounter_TIMER0++;
@@ -354,10 +385,10 @@ ISR(TIMER0_COMPA_vect){
 }
 
 ISR(TIMER2_COMPA_vect){
-	/* DEBUG SECTION *
-	char t_str[30];
+	/* DEBUG SECTION  */
+	/*char t_str[30];
 	sprintf(t_str, "soundcounter %d\n", soundCounter);
-	USART_Transmit_String(t_str);
+	USART_Transmit_String(t_str);*/
 	/* END DEBUG */
 	PORTD = *(cursor_TIMER2+soundCounter_TIMER2);
 	soundCounter_TIMER2++;
