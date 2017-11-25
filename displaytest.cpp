@@ -53,7 +53,8 @@
 #define BAUD	9600					// serial communication baud rate
 #define UBRR_VALUE F_CPU/16/BAUD-1
 
-/* ONLY FOR DEBUGGING!!! *
+/* 
+ONLY FOR DEBUGGING!!!
 #include "USART/USART_implement_me.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -72,6 +73,7 @@ char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
   sprintf(sout, fmt, whole, frac);
   return sout;
 }
+*/
 /* END OF DEBUGGING */
 
 
@@ -199,7 +201,7 @@ void update_scoreboard(uint8_t type){
 
 void init_hi_score(void) {
 	drawGenericSprite(TFT_WIDTH/2-20,0, 17, hi, ST7735_GREEN);
-	drawScore(TFT_WIDTH/2,0)
+	drawScore(TFT_WIDTH/2,0);
 	push_score(TFT_WIDTH/2-10,8,hi_score);		//update hi score
 }
 void update_lives(uint8_t player) {
@@ -302,7 +304,7 @@ ISR(TIMER1_COMPA_vect) {
 		checkDeadAlien(shootplayer.getX(), shootplayer.getY());
 	}
 	coun++;
-	/* DEBUG SECTION *
+	/* DEBUG SECTION 
 	char t_str[30];
 	sprintf(t_str, "ALIENSPEED %d\n", alienspeed);
 	USART_Transmit_String(t_str);
@@ -316,10 +318,10 @@ ISR(TIMER1_COMPA_vect) {
 
 ISR(TIMER0_COMPA_vect){
 	PORTB ^= (1<<PB0);
-	/* DEBUG SECTION *
+	/* DEBUG SECTION 
 	char t_str[30];
 	sprintf(t_str, "soundcounter %d\n", soundCounter);
-	USART_Transmit_String(t_str);
+	USART_Transmit_String(t_str); */
 	/* END DEBUG */
 	PORTD = *(cursor_TIMER0+soundCounter_TIMER0);
 	soundCounter_TIMER0++;
@@ -331,10 +333,10 @@ ISR(TIMER0_COMPA_vect){
 }
 
 ISR(TIMER2_COMPA_vect){
-	/* DEBUG SECTION *
-	char t_str[30];
+	/* DEBUG SECTION  */
+	/*char t_str[30];
 	sprintf(t_str, "soundcounter %d\n", soundCounter);
-	USART_Transmit_String(t_str);
+	USART_Transmit_String(t_str);*/
 	/* END DEBUG */
 	PORTD = *(cursor_TIMER2+soundCounter_TIMER2);
 	soundCounter_TIMER2++;
