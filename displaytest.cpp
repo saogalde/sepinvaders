@@ -81,7 +81,7 @@ Shoot shootplayer;
 volatile uint8_t currentLevel = 1;
 volatile int scoreboard = 0;
 volatile int aliveAliens = NUMBER_OF_ALIENS;
-volatile uint16_t alienspeed = 255;
+volatile uint16_t alienspeed = 15;
 //volatile int 
 /* END OF DEFINITION OF GLOBAL VARIABLES */
 
@@ -130,7 +130,7 @@ void Timer_IO_Init(void) {
 	TIMSK1 |= (1 << OCIE1A);
 	//OCR1A   = 1562;
 
-	OCR1A   = 0xAFFF;  //<-------------- deleted for testing
+	OCR1A   = 0x57FF;  //<-------------- deleted for testing
 	//OCR1A = 1000;
 	
 	//TCCR1B |= (1<<CS10)|(1<<CS12);		//NO ACTIVAR!!! CS => prescaler set to 64
@@ -149,14 +149,14 @@ void Timer_IO_Init(void) {
 	PORTC &= ~(1<<PORTC3);											// clear 
 }
 
-void Timer_Aliens_Init(void){
+void Timer_Sound_Init(void){
 	DDRD |= (1<<DDD0);												// output button 
 	PORTD &= ~(1<<PD0);											// clear 
-	OCR0A = 255;
+	OCR0A = 180; // approx 11kHz
 	TCCR0A |= (1 << COM0A1); 
 	TCCR0A |= (1 << WGM01);
-	TIMSK0 |= (1 << OCIE0A);
-	TCCR0B |= (1 << CS01)|(1 << CS00);
+	TIMSK0 |= (1 << OCIE0A); // timer interrupt
+	TCCR0B |= (1 << CS01); // prescaler /8
 }
 
 void push_score(int scoreboard) {
@@ -226,7 +226,7 @@ int main(void)
 	_delay_ms(400);
 	Timer_IO_Init();
 	//stop_timer1();
-	Timer_Aliens_Init();
+	Timer_Sound_Init();
 	sei();		
 	/*moveAliens();
 	_delay_ms(100);
@@ -299,7 +299,7 @@ int main(void)
 	while(1);
 }// Test programs. The following sequence runs many different images over the display.
 
-
+volatile uint16_t coun = 0;
 ISR(TIMER1_COMPA_vect) {
 	if(!(PINC & (1<<PINC0))) {
 		//stop_timer1();
@@ -320,10 +320,9 @@ ISR(TIMER1_COMPA_vect) {
 	}
 	PORTC ^= (1<<PC3);
 	//PORTD ^= (1<<PC0);
-}
 
-volatile uint8_t coun = 0;
-ISR(TIMER0_COMPA_vect){
+
+
 	coun++;
 	/* DEBUG SECTION *
 			char t_str[30];
@@ -333,7 +332,12 @@ ISR(TIMER0_COMPA_vect){
 			/* END DEBUG */
 	if(coun==alienspeed){
 		coun = 0;
-		PORTD ^= (1<<PD0);
+		//PORTD ^= (1<<PD0);
 		moveAliens();
 	}
+}
+
+//volatile uint8_t coun = 0;
+ISR(TIMER0_COMPA_vect){
+	//PORTD ^= (1<<PD0);
 }
