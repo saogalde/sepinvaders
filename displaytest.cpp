@@ -1,25 +1,3 @@
-/***************************************************
- * This is an example program on how to use the 
- * ST7735R based 1.8" color TFT LCD display from
- * Adafruit Industries with the Atmel ATmega328PB
- * Xplained mini developer board.
- * Note that this display also contains a micro SD
- * card socket on its back side.
- * 
- * See here for further information:
- * http://www.adafruit.com/products/358
- *
- * 
- * Note that a lot of this code is directly taken from
- * the C code examples found in the Atmel datasheets.
- * Other parts of the code are inspired by and based on
- * the Adafruit example programs for Arduino.
- * 
- * This code is under the MIT licence.
- * 
- ****************************************************/
-
-
 // MCU Clock Speed - needed for delay.h
 #define F_CPU	16000000UL
 
@@ -58,8 +36,7 @@
 #define BAUD	9600					// serial communication baud rate
 #define UBRR_VALUE F_CPU/16/BAUD-1
 
-/* 
-ONLY FOR DEBUGGING!!!
+/* ONLY FOR DEBUGGING!!! *
 #include "USART/USART_implement_me.h"
 //#include <stdlib.h>
 #include <stdio.h>
@@ -78,7 +55,6 @@ char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
   sprintf(sout, fmt, whole, frac);
   return sout;
 }
-*/
 /* END OF DEBUGGING */
 
 
@@ -91,7 +67,7 @@ Shoot shootplayer;
 volatile uint8_t lives = LIVES;
 volatile uint8_t currentLevel = 1;
 volatile int scoreboard = 0;
-volatile int hi_score = (int) eeprom_read_word (( uint16_t *) 0);
+volatile int hi_score = (int)eeprom_read_word((uint16_t *)0);
 volatile int aliveAliens = NUMBER_OF_ALIENS;
 volatile uint16_t coun = 0;
 volatile uint16_t alienspeed = STARTING_ALIEN_SPEED;
@@ -214,6 +190,12 @@ void push_score(int x,int y,int scoreboard) {
 	drawNumber(x+0,y,scoreboard%10);
 }
 
+void saveHighScore(){
+	if(scoreboard > hi_score){
+		eeprom_update_word((uint16_t*) 0,scoreboard);
+	}
+}
+
 void update_scoreboard(uint8_t type){
 	if (type==ALIEN_0) scoreboard += 20;
 	else if (type==ALIEN_1) scoreboard += 10;
@@ -261,7 +243,7 @@ void checkDeadAlien(uint8_t x, uint8_t y){
 					update_scoreboard(aliens[i].getType());
 					playSound('k');
 					alienspeed -= 2;
-					if(aliveAliens == 0){
+					if(aliveAliens <= 0){
 						initLevel(++currentLevel);
 					}
 					//if(alienspeed<=20) alienspeed = 20;
@@ -299,6 +281,7 @@ void initLevel(uint8_t level){
 	stopSound_TIMER0();
 	stopSound_TIMER2();
 	alienspeed = STARTING_ALIEN_SPEED;
+	aliveAliens = NUMBER_OF_ALIENS;
 	createAliens(level-1);
 	_delay_ms(400);
 	Timer_IO_Init();
@@ -310,7 +293,7 @@ void initLevel(uint8_t level){
 /** The main function **/
 int main(void)
 {
-	//eeprom_update_word(( uint16_t*) 0, 986 );	//write code
+	//eeprom_update_word(( uint16_t*) 0, 0);	//write code
 	USART_Init(BAUD);
 	SPI_Master_Init();
 	ST7735_init();
@@ -356,6 +339,7 @@ ISR(TIMER1_COMPA_vect) {
 		moveAliens();
 		if(checkGameOver()){
 			fillScreen(ST7735_RED);
+			saveHighScore();
 			stop_timer1();
 			stopSound_TIMER0();
 			stopSound_TIMER2();}
