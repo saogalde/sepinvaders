@@ -1,5 +1,6 @@
 // MCU Clock Speed - needed for delay.h
 #define F_CPU	16000000UL
+#define MCP4725_WRITE	0xC0
 
 #include <avr/eeprom.h>
 #include <avr/io.h>
@@ -15,11 +16,15 @@
 #include "sprite.h"
 #include "sound/sound.h"
 //#include "splashscreen.h"
-
+//#include "I2C/avr-i2c-master.h"
+//#include "I2C/TWI_Master.h"
+#include "I2C/I2C.h"
 #include "SPI/SPI_implement_me.h"
 #include "USART/USART_implement_me.h"
 #include "display/ST7735_commands.h"
 #include "display/graphic_shapes.h"
+
+#include "PetitFatFilesystem/PetitFS.h"
 
 #define NUMBER_OF_ALIENS	25 // 4x4 array
 #define LIVES 				3
@@ -54,7 +59,7 @@ char *dtostrf (double val, signed char width, unsigned char prec, char *sout) {
   sprintf(fmt, "%%0%dd.%%0%dd", width, prec);
   sprintf(sout, fmt, whole, frac);
   return sout;
-}
+}*/
 /* END OF DEBUGGING */
 
 
@@ -104,7 +109,32 @@ void moveAliens(){
 		}
 	}
 }
-
+/*
+void dac_i2c(uint16_t sample) {
+	uint8_t i2c_msg[4];
+	i2c_msg[0] = MCP4725_WRITE;
+	i2c_msg[1] = (0x01<<6);
+	i2c_msg[2] = (uint8_t) ((sample & 0xFF0) >> 4);
+	i2c_msg[3] = (uint8_t) ((sample & 0xF) << 4);
+	//i2c_transmit(i2c_msg, 4, 1);
+	TWI_Start_Transceiver_With_Data(i2c_msg, 4);
+}
+*/
+void dac_i2c(uint16_t sample) {
+	i2cSendStart();							// send start condition
+	i2cWaitForComplete();
+	
+	i2cSendByte(MCP4725_WRITE); 			// send WRITE address of TMP102
+	i2cWaitForComplete();
+	i2cSendByte((0x01<<6)); 				// set TMP102 pointer register to 0 (read temperature)
+	i2cWaitForComplete();
+	i2cSendByte((sample & 0xFF0) >> 4); 	// upper data bits
+	i2cWaitForComplete();
+	i2cSendByte((sample & 0xF) << 4); 		// lower data bits
+	i2cWaitForComplete();
+	i2cSendStop();							// send stop condition
+	TWCR = 0;								// stop everything
+}
 
 bool checkGameOver(){
 	for(uint8_t i=0; i<NUMBER_OF_ALIENS; i++){
@@ -112,7 +142,7 @@ bool checkGameOver(){
 			/* DEBUG SECTION *
 			char t_str[30];
 			sprintf(t_str, "alienY %d\n", aliens[i].getY());
-			USART_Transmit_String(t_str);
+			USART_Transmit_String(t_str);*/
 			/* END DEBUG */
 			if(aliens[i].getY()>=GAME_OVER_LIMIT_Y){
 				return true;
@@ -161,7 +191,14 @@ void Timer_IO_Init(void) {
 	DDRC |= (1<<DDC3);												// output button 
 	PORTC &= ~(1<<PORTC3);											// clear 
 }
-
+/*
+void errorHalt(char* msg) {
+	USART_Transmit_String("Error: ");
+	USART_Transmit_String(msg);
+	USART_Transmit_String("\r\n");
+	while(1);
+}
+*/
 void Timer_Sound0_Init(void){
 	DDRD |= (1<<DDD0);												// output button 
 	PORTD &= ~(1<<PD0);											// clear 
@@ -233,7 +270,7 @@ void checkDeadAlien(uint8_t x, uint8_t y){
 			USART_Transmit_String(t_str);
 			sprintf(t_str, "COMP IF: %d<=%d<=%d\n", coords[1]-KILLING_RANGE_Y, aliens[i].getY(),coords[1]+KILLING_RANGE_Y);
 			USART_Transmit_String(t_str);
-			USART_Transmit_String("--------------------------\n");
+			USART_Transmit_String("--------------------------\n");*/
 			/* END DEBUG */
 
 			if(aliens[i].getX()<=coords[0]+KILLING_RANGE_X && aliens[i].getX()>=coords[0]-KILLING_RANGE_X){
@@ -247,10 +284,10 @@ void checkDeadAlien(uint8_t x, uint8_t y){
 						initLevel(++currentLevel);
 					}
 					//if(alienspeed<=20) alienspeed = 20;
-					/* DEBUG SECTION *
-					char t_str[30];
+					/* DEBUG SECTION */
+					/*char t_str[30];
 					sprintf(t_str, "alienspeed %d\n", alienspeed);
-					USART_Transmit_String(t_str);
+					USART_Transmit_String(t_str);*/
 					/* END DEBUG */
 					//alienspeed = aliveAliens*10;
 					//return 0;
@@ -291,12 +328,35 @@ void initLevel(uint8_t level){
 }
 
 /** The main function **/
-int main(void)
-{
+int main(void) {
+	FATFS fs;     			/* File system structure */
+	uint8_t buf[24];		/* Buffer for card access */
+	static UINT nr;			/* Used for various file access functions. */
 	//eeprom_update_word(( uint16_t*) 0, 0);	//write code
 	USART_Init(BAUD);
+	//i2c_master_init();
+	//TWI_Master_Initialise();
+
+	I2C_Init();
 	SPI_Master_Init();
 	ST7735_init();
+	if (pf_mount(&fs)) //errorHalt("pf_mount");
+	//if (pf_open("test.bmp")) errorHalt("pf_open");
+	if (pf_open("test.bmp")) //errorHalt("pf_open");
+	if (pf_lseek(54)) //errorHalt("pf_lseek");
+	for(int z=0; z<TFT_HEIGHT; z++) {
+		for(int j=0; j<16; j++) {
+			//for(int i=0; i<1; i++) {
+				if (pf_read(buf, sizeof(buf), &nr)) //errorHalt("pf_read");
+				//for(uint8_t z=0; z<nr; z++) {
+					//USART_Transmit_char(buf[z]);
+				//}
+			//}
+			for(int n=0; n<8;n++) {
+				drawPixelRGB(n+j*8, TFT_HEIGHT-1-z, buf[2+3*n], buf[1+3*n], buf[0+3*n]);
+			}
+		}
+	}
 	initLevel(currentLevel);
 	sei();		
 	
@@ -328,11 +388,11 @@ ISR(TIMER1_COMPA_vect) {
 		checkDeadAlien(shootplayer.getX(), shootplayer.getY());
 	}
 	coun++;
-	/* DEBUG SECTION 
-	char t_str[30];
+	/* DEBUG SECTION */
+	/*char t_str[30];
 	sprintf(t_str, "ALIENSPEED %d\n", alienspeed);
 	USART_Transmit_String(t_str);
-	USART_Transmit_String("--------------------------\n"); 
+	USART_Transmit_String("--------------------------\n"); */
 	/* END DEBUG */
 	if(coun>=alienspeed){
 		coun = 0;
@@ -348,17 +408,22 @@ ISR(TIMER1_COMPA_vect) {
 
 ISR(TIMER0_COMPA_vect){
 	PORTB ^= (1<<PB0);
-	/* DEBUG SECTION 
-	char t_str[30];
+	/* DEBUG SECTION */
+	/*char t_str[30];
 	sprintf(t_str, "soundcounter %d\n", soundCounter);
 	USART_Transmit_String(t_str); */
 	/* END DEBUG */
-	PORTD = *(cursor_TIMER0+soundCounter_TIMER0);
+	//PORTD = *(cursor_TIMER0+soundCounter_TIMER0);
+	//uint16_t data_sound = *(cursor_TIMER0+soundCounter_TIMER0);
+	uint16_t data_sound = cursor_TIMER0[soundCounter_TIMER0];
+	data_sound = (data_sound<<4); 								//dac 12 bits
 	soundCounter_TIMER0++;
-	
+	dac_i2c(data_sound);
 	if(soundCounter_TIMER0 >= currentLength_TIMER0){ 
 		stopSound_TIMER0();
-		PORTD = 0;
+		dac_i2c(0x0000);
+		//_delay_ms(1000);
+		//PORTD = 0;
 	}
 }
 
@@ -368,11 +433,13 @@ ISR(TIMER2_COMPA_vect){
 	sprintf(t_str, "soundcounter %d\n", soundCounter);
 	USART_Transmit_String(t_str);*/
 	/* END DEBUG */
-	PORTD = *(cursor_TIMER2+soundCounter_TIMER2);
+	//PORTD = *(cursor_TIMER2+soundCounter_TIMER2);
+	uint16_t data_sound = *(cursor_TIMER2+soundCounter_TIMER2);
+	data_sound = (data_sound<<4); 								//dac 12 bits
 	soundCounter_TIMER2++;
-	
+	dac_i2c(data_sound);
 	if(soundCounter_TIMER2 >= currentLength_TIMER2){ 
 		stopSound_TIMER2();
-		PORTD = 0;
+		dac_i2c(0x0000);
 	}
 }

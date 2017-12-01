@@ -52,7 +52,8 @@ void SPI_Master_Init(void)
 {/* Set MOSI and SCK output, all others input */
 	DDRB |= (1<<DD_MOSI)|(1<<DD_SCK)|(1<<PB2);
 	// enable CS
-	DDRC |= (1<<DD_SS_TFT)|(1<<DC_PIN);
+	DDRC |= (1<<DC_PIN);
+	DDRB |= (1<<DD_SS_TFT);
 	/* Enable SPI, Master, set clock rate fck/4 */
 	SPCR = (1<<SPE)|(1<<MSTR);
 	CS_HIGH();
@@ -74,16 +75,6 @@ void SPI_Master_Init(void)
 // elsewhere at a later stage.
 // In this context, do not overlook the two additional macro definitions in
 // the header file.
-void SPI_Master_transmit_char(uint8_t data, bool commandmode)
-{/* Start transmission */
-	if(commandmode){DC_LOW();}
-	else{DC_HIGH();}
-	CS_LOW();
-	SPDR = data;
-	/* Wait for transmission complete */
-	while(!(SPSR & (1<<SPIF)));
-	CS_HIGH();
-}
 
 void SPI_Master_transmit_char_fast(uint8_t data)
 {/* Start transmission */
@@ -92,4 +83,34 @@ void SPI_Master_transmit_char_fast(uint8_t data)
 	/* Wait for transmission complete */
 	while(!(SPSR & (1<<SPIF)));
 	CS_HIGH();
+}
+
+void SPI_Master_transmit_char(uint8_t data, bool commandmode, uint8_t slave) {/* Start transmission */
+	if(slave == 1) {
+		if(commandmode){DC_LOW();}
+		else{DC_HIGH();}
+		CS_LOW();
+		SPDR = data;
+		/* Wait for transmission complete */
+		while(!(SPSR & (1<<SPIF)));
+		CS_HIGH();
+	}
+	else if(slave == 0) {
+		SPDR = data;
+		/* Wait for transmission complete */
+		while(!(SPSR & (1<<SPIF)));
+	}
+}
+
+
+// This function receives a single byte over the SPI bus.
+//
+// This is very easy and short if you understood how SPI works.
+// Hint: It is a *full duplex* bus!
+char SPI_Master_receive_char(void) {
+	//PORTB &= ~(1<<2);
+	SPDR = 0xFF;
+	while (!(SPSR & (1 << SPIF)));
+	return SPDR;
+	//PORTB |= (1<<2);
 }
